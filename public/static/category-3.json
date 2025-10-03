@@ -1,0 +1,64 @@
+{
+  "category_id": 3,
+  "org_id": 1,
+  "category_name": "Activa 6G",
+  "parent_id": 0,
+  "sub_category_count": 0,
+  "elements": {
+    "meta": {
+      "total": 1,
+      "per_page": 10,
+      "current_page": 1,
+      "last_page": 1,
+      "first_page": 1,
+      "first_page_url": "/element/1?limit=10?page=1",
+      "last_page_url": "/element/1?limit=10?page=1",
+      "next_page_url": null,
+      "previous_page_url": null
+    },
+    "data": [
+      {
+        "id": 56,
+        "name": "Honda Activa 6G Front Black",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2F975f2ab7-567a-4753-b9c4-eeeb9eb4befa.png",
+        "element_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2F975f2ab7-567a-4753-b9c4-eeeb9eb4befa.png",
+        "type": "image"
+      },
+      {
+        "id": 57,
+        "name": "Honda Activa 6G Front Blue",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2F2c3058bb-a34d-4341-8f72-0f55dd794b74.png",
+        "element_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2F2c3058bb-a34d-4341-8f72-0f55dd794b74.png",
+        "type": "image"
+      },
+      {
+        "id": 58,
+        "name": "Honda Activa 6G Front Maroon",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2F45b6a991-12bc-43b9-b25a-f1fcf577c0a7.png",
+        "element_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2F45b6a991-12bc-43b9-b25a-f1fcf577c0a7.png",
+        "type": "image"
+      },
+      {
+        "id": 59,
+        "name": "Honda Activa 6G Front Rose Gold",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2F000739b3-84b6-47fe-ae79-7a732a2ffb87.png",
+        "element_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2F000739b3-84b6-47fe-ae79-7a732a2ffb87.png",
+        "type": "image"
+      },
+      {
+        "id": 60,
+        "name": "Honda Activa 6G Front White",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2Fd3481ebd-000a-43fd-adac-0e65c0ad4181.png",
+        "element_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2Fd3481ebd-000a-43fd-adac-0e65c0ad4181.png",
+        "type": "image"
+      },
+      {
+        "id": 61,
+        "name": "Honda Activa 6G Hero Blue",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2Ff3dc5344-f552-459c-9faa-cb581256bdc2.png",
+        "element_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fimage%2Ff3dc5344-f552-459c-9faa-cb581256bdc2.png",
+        "type": "image"
+      }
+    ]
+  }
+}

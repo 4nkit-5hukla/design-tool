@@ -1,0 +1,76 @@
+{
+  "category_id": 4,
+  "org_id": 1,
+  "category_name": "Shapes",
+  "parent_id": 0,
+  "sub_category_count": 0,
+  "elements": {
+    "meta": {
+      "total": 1,
+      "per_page": 10,
+      "current_page": 1,
+      "last_page": 1,
+      "first_page": 1,
+      "first_page_url": "/element/1?limit=10?page=1",
+      "last_page_url": "/element/1?limit=10?page=1",
+      "next_page_url": null,
+      "previous_page_url": null
+    },
+    "data": [
+      {
+        "id": 73,
+        "name": "Square",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fbasic%2F3302abf7-29be-4a29-8fbe-4625b583f3b8.png",
+        "element_url": "/static/element_basic_1.svg",
+        "type": "basic_element",
+        "size": "small",
+        "transform": 4
+      },
+      {
+        "id": 74,
+        "name": "Circle",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fbasic%2F4280d194-4ea5-4203-b301-e86c09e27425.png",
+        "element_url": "/static/element_basic_2.svg",
+        "type": "basic_element",
+        "size": "small",
+        "transform": 4
+      },
+      {
+        "id": 75,
+        "name": "Star 5 Sides",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fbasic%2F973f2f27-842e-4d82-b3f3-9bdc2b644f7b.png",
+        "element_url": "/static/element_basic_3.svg",
+        "type": "basic_element",
+        "size": "small",
+        "transform": 4
+      },
+      {
+        "id": 76,
+        "name": "Rounded Square",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fbasic%2F445a9e75-e47b-4cd6-afd3-1f0064fc58b1.png",
+        "element_url": "/static/element_basic_1.svg",
+        "type": "basic_element",
+        "size": "small",
+        "transform": 4
+      },
+      {
+        "id": 77,
+        "name": "Triangle",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fbasic%2Fb6dd8642-d4fc-490a-8572-cc3d74b03977.png",
+        "element_url": "/static/element_basic_3.svg",
+        "type": "basic_element",
+        "size": "small",
+        "transform": 4
+      },
+      {
+        "id": 78,
+        "name": "Pill Half",
+        "thumb_url": "https://storage.googleapis.com/easysocial_production/admin-assets%2Fengage%2Fassets%2Felements%2Fbasic%2Ff5139076-d540-404f-9224-560b4438dd98.png",
+        "element_url": "/static/element_basic_4.svg",
+        "type": "basic_element",
+        "size": "small",
+        "transform": 4
+      }
+    ]
+  }
+}
