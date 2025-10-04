@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import { Box, Switch, Typography } from "@mui/material";
+import { ToolbarProps } from "Interfaces/ComponentProps";
 
-export const UseShadow = ({ selectedEl, updateElement }: any) => {
+export const UseShadow: FC<ToolbarProps> = ({ selectedEl, updateElement }) => {
   const [shadowEnabled, setShadowEnabled] = useState<boolean>(false);
 
   useEffect(() => {

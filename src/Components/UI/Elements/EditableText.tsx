@@ -1,13 +1,36 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { Fragment, useRef, useEffect, useState } from "react";
+import { FC, Fragment, useRef, useEffect, useState } from "react";
 import { Text, Transformer } from "react-konva";
 import { Html, Portal } from "react-konva-utils";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
 import { useElementsContext } from "Contexts/Elements";
 
-const EditableText = ({
+interface EditableTextProps {
+  onDragMove: (e: KonvaEventObject<DragEvent>) => void;
+  onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  onClick: (e: KonvaEventObject<MouseEvent>) => void;
+  onTransform: (e: Record<string, unknown>) => void;
+  onMouseDown?: (e: KonvaEventObject<MouseEvent>) => void;
+  onTransformEnd: (e: Record<string, unknown>) => void;
+  editText: boolean;
+  toggleEditText: (edit: boolean) => void;
+  isSelected: boolean;
+  stage: Konva.Stage;
+  id: string;
+  text: string;
+  draggable: boolean;
+  lock?: boolean;
+  useList?: boolean;
+  listType?: string;
+  canvasHeight: number;
+  canvasWidth: number;
+  name: string;
+  [key: string]: unknown;
+}
+
+const EditableText: FC<EditableTextProps> = ({
   onDragMove,
   onDragEnd,
   onClick,
@@ -28,17 +51,6 @@ const EditableText = ({
   canvasWidth,
   name,
   ...props
-}: {
-  onDragEnd: (e: any) => void;
-  onTransform: (e: any) => void;
-  onClick: (e: any) => void;
-  isSelected: boolean;
-  stage: Konva.Stage;
-  id: string | any;
-  text: string;
-  [key: string]: any;
-  canvasWidth: number;
-  canvasHeight: number;
 }) => {
   const { focused, setFocused, unFocus } = useElementsContext();
 
@@ -96,7 +108,7 @@ const EditableText = ({
   const [originValue, setOriginValue] = useState<string>(text);
   const [textareaValue, setTextareaValue] = useState<string>(originValue);
 
-  const getTextareaWidth = (width: any) => {
+  const getTextareaWidth = (width: number) => {
     let newWidth = width;
     if (!newWidth) {
       newWidth =
@@ -154,7 +166,7 @@ const EditableText = ({
     }
   }, [focused]);
 
-  const handleTextDblClick = (e: any) => {
+  const handleTextDblClick = (e: KonvaEventObject<MouseEvent>) => {
     toggleEditText(true);
     elementRef.current.hide();
     // transformerRef.current.hide();

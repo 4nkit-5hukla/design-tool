@@ -1,4 +1,4 @@
-import { Fragment, MouseEvent, useState } from "react";
+import { FC, Fragment, MouseEvent, useState } from "react";
 import {
   Box,
   Button,
@@ -8,14 +8,14 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { ChromePicker } from "react-color";
+import { ChromePicker, ColorResult } from "react-color";
 import { Close, Cached } from "@mui/icons-material";
 
 import { swatchColor } from "Configs";
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
 
-const ShapeColor = () => {
+const ShapeColor: FC = () => {
   const [addColorEl, setAddColorEl] = useState<HTMLButtonElement | null>(null);
   const { currentColor, setEditTool, setCurrentColor, toggleEditSelected } =
     useAppState();
@@ -261,6 +261,7 @@ const ShapeColor = () => {
                 border="1px solid #99999980"
                 borderRadius={0.125}
                 columnGap={"5px"}
+              // @ts-expect-error MUI v7 component prop typing issue
                 component={ToggleButton}
                 paddingY={0}
                 paddingX={0}
@@ -315,6 +316,7 @@ const ShapeColor = () => {
               <Box
                 border="1px solid #99999980"
                 borderRadius={0.125}
+              // @ts-expect-error MUI v7 component prop typing issue
                 columnGap={"5px"}
                 component={ToggleButton}
                 paddingY={0}
@@ -381,8 +383,8 @@ const ShapeColor = () => {
         <ChromePicker
           color={currentColor}
           disableAlpha={true}
-          onChange={({ hex }: any) => {
-            const newColor = `#${hex}`;
+          onChange={(color: ColorResult) => {
+            const newColor = color.hex;
             setCurrentColor(newColor);
             updateElement(
               {

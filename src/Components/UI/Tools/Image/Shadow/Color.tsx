@@ -1,9 +1,10 @@
-import { Fragment, MouseEvent, useEffect, useState } from "react";
+import { FC, Fragment, MouseEvent, useEffect, useState } from "react";
 
 import { Box, Button, Popover, Typography } from "@mui/material";
-import { ChromePicker } from "react-color";
+import { ChromePicker, ColorResult } from "react-color";
+import { ShadowProps } from "Interfaces/ComponentProps";
 
-export const Color = ({ shadowEnabled, selectedEl, updateElement }: any) => {
+export const Color: FC<ShadowProps> = ({ shadowEnabled, selectedEl, updateElement }) => {
   const [shadowColor, setShadowColor] = useState<string>("#000000");
   const [changeColorEl, setChangeColorEl] = useState<HTMLButtonElement | null>(
     null
@@ -99,12 +100,12 @@ export const Color = ({ shadowEnabled, selectedEl, updateElement }: any) => {
         <ChromePicker
           color={shadowColor}
           disableAlpha={true}
-          onChange={({ hex }: any) => {
-            setShadowColor(`#${hex}`);
+          onChange={(color: ColorResult) => {
+            setShadowColor(color.hex);
             updateElement(
               {
                 id: selectedEl.id,
-                shadowColor: `#${hex}`,
+                shadowColor: color.hex,
               },
               { saveHistory: false }
             );

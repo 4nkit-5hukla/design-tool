@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import { Box, Slider, TextField, Typography } from "@mui/material";
 
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
 
-const Saturation = () => {
+const Saturation: FC = () => {
   const { toggleEditingData } = useAppState();
   const { selectedEl, updateElement } = useElementsContext();
   const [saturation, setSaturation] = useState<number>(0);
@@ -89,11 +89,12 @@ const Saturation = () => {
         min={-10}
         max={10}
         className={saturation < 0 ? "value-negative" : "value-positive"}
-        onChange={(event: Event, newValue: any) => {
+        onChange={(event: Event, newValue: number | number[]) => {
+          const values = Array.isArray(newValue) ? newValue : [newValue];
           const value =
-            (newValue[0] as number) !== 0
-              ? (newValue[0] as number)
-              : (newValue[1] as number);
+            values[0] !== 0
+              ? values[0]
+              : values[1];
           updateElement(
             { ...selectedEl, saturation: value / 10 },
             { saveHistory: false }

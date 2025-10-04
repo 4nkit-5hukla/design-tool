@@ -1,12 +1,37 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { Fragment, useEffect, useRef } from "react";
+import { FC, Fragment, useEffect, useRef } from "react";
 import { Path, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
 
-const TransformableSinglePath = ({
+interface TransformableSinglePathProps {
+  onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  onTransform: (e: Record<string, unknown>) => void;
+  onClick: (e: KonvaEventObject<MouseEvent>) => void;
+  onMouseDown?: (e: KonvaEventObject<MouseEvent>) => void;
+  isSelected: boolean;
+  height: number;
+  width: number;
+  stroke: string;
+  strokeWidth: number;
+  strokeType?: string;
+  fill: string;
+  d: string;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+  shadowEnabled?: boolean;
+  name: string;
+  lock?: boolean;
+  draggable: boolean;
+  [key: string]: unknown;
+}
+
+const TransformableSinglePath: FC<TransformableSinglePathProps> = ({
   onDragEnd,
   onClick,
   onMouseDown,
@@ -29,12 +54,6 @@ const TransformableSinglePath = ({
   lock,
   draggable,
   ...props
-}: {
-  onDragEnd: (e: any) => void;
-  onTransform: (e: any) => void;
-  onClick: (e: any) => void;
-  isSelected: boolean;
-  [key: string]: any;
 }) => {
   const pathRef = useRef<Konva.Path | any>();
   const transformerRef = useRef<Konva.Transformer | any>();

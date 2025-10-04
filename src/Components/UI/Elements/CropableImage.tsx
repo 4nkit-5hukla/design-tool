@@ -1,7 +1,9 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { Image, Rect, Circle, Transformer } from "react-konva";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
+
+import { CropableImageProps, ImageElementState } from "Interfaces";
 
 const debug = false;
 
@@ -29,7 +31,7 @@ const Action = {
   innerTransform: 4,
 };
 
-export function CropableImage({
+export const CropableImage: FC<CropableImageProps> = ({
   state,
   setState,
   isSelected,
@@ -37,7 +39,7 @@ export function CropableImage({
   onDragMove,
   onDragEnd,
   onClick,
-}) {
+}) => {
   // const counter = useRef(0);
   // counter.current = counter.current + 1;
   // console.log("image rendered: " + counter.current);
@@ -344,7 +346,7 @@ export function CropableImage({
       : Mode.notSelectedNotCropped;
 
   // select helpers
-  const select = (e) => {
+  const select = (e: KonvaEventObject<MouseEvent>) => {
     setAction(Action.none);
     setState({ ...state, ...getTempState(), isCropped, isCropping });
     onClick(e); // from props
@@ -356,11 +358,11 @@ export function CropableImage({
   const sin = () => Math.sin(radRotation());
 
   // events
-  const imageOnClick = (e) => {
+  const imageOnClick = (e: KonvaEventObject<MouseEvent>) => {
     select(e);
   };
 
-  const imageOnDragMove = (e) => {
+  const imageOnDragMove = (e: KonvaEventObject<DragEvent>) => {
     onDragMove(e);
     const image = imageRef.current;
     const rect = rectRef.current;
@@ -403,13 +405,13 @@ export function CropableImage({
     updateNodes();
   };
 
-  const anyTransformDragEnd = (e) => {
+  const anyTransformDragEnd = (e: KonvaEventObject<DragEvent>) => {
     updateState();
     image.cache();
     onDragEnd(e);
   };
 
-  const outerBoundBoxFunc = (oldBox, newBox) => {
+  const outerBoundBoxFunc = (oldBox: any, newBox: any) => {
     if (oldBox.rotation !== newBox.rotation) return newBox;
     if (newBox.width < 10 || newBox.height < 10) return oldBox;
     const image = imageRef.current;
@@ -449,7 +451,7 @@ export function CropableImage({
       ? innerHeight - innerOffsetY
       : innerOffsetY
     : height / 2;
-  const darkerProps = (ref) =>
+  const darkerProps = (ref: any) =>
     mode === Mode.selectedCropping
       ? {
           ref: ref,
@@ -664,9 +666,9 @@ export function CropableImage({
       />
     </>
   );
-}
+};
 
-export function flipImage(element, orientation) {
+export function flipImage(element: ImageElementState, orientation: string): Partial<ImageElementState> {
   const {
     id,
     innerWidth,
@@ -714,7 +716,7 @@ export function flipImage(element, orientation) {
   }
 }
 
-export function alignImage(element, canvas, align) {
+export function alignImage(element: ImageElementState, canvas: { width: number; height: number }, align: string) {
   const [center, middle, ...rest] = vertices(element);
   const cx = center.x;
   const cy = center.y;
@@ -731,7 +733,7 @@ export function alignImage(element, canvas, align) {
   return { id: element.id, x, y };
 }
 
-function vertices(element) {
+function vertices(element: ImageElementState) {
   const {
     innerWidth,
     innerOffsetX,
@@ -747,7 +749,7 @@ function vertices(element) {
   } = element;
   const cos = Math.cos((rotation / 180) * Math.PI);
   const sin = Math.sin((rotation / 180) * Math.PI);
-  const absXY = (dx, dy) => ({
+  const absXY = (dx: number, dy: number) => ({
     x: x + dx * scale * cos - dy * scale * sin,
     y: y + dx * scale * sin + dy * scale * cos,
   });

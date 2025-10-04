@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import {
   Box,
@@ -12,7 +12,7 @@ import {
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
 
-const Red = () => {
+const Red: FC = () => {
   const { toggleEditingData } = useAppState();
   const { selectedEl, updateElement } = useElementsContext();
   const [rgb, setRGB] = useState<boolean>(false);
@@ -131,8 +131,8 @@ const Red = () => {
         step={1}
         min={0}
         max={255}
-        onChange={(event: Event, newValue: any) => {
-          const value = newValue as number;
+        onChange={(event: Event, newValue: number | number[]) => {
+          const value = Array.isArray(newValue) ? newValue[0] : newValue;
           updateElement({ ...selectedEl, red: value }, { saveHistory: false });
           setRed(value);
         }}

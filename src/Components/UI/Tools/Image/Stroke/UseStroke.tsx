@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import { Box, Switch, Typography } from "@mui/material";
 
 import { useElementsContext } from "Contexts/Elements";
+import { ToolbarProps } from "Interfaces/ComponentProps";
 
-export const UseStroke = ({ selectedEl, updateElement }: any) => {
+export const UseStroke: FC<ToolbarProps> = ({ selectedEl, updateElement }) => {
   const { unSelect, setSelected } = useElementsContext();
   const [strokeEnabled, setStrokeEnabled] = useState<boolean>(false);
 

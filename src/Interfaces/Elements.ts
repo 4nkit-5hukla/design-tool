@@ -1,3 +1,5 @@
+import { KonvaEventObject } from "konva/lib/Node";
+
 export enum Mode {
   NotSelectedNotCropped = 0,
   NotSelectedCropped = 1,
@@ -100,10 +102,10 @@ export interface ClippedImageElementState {
 
 export interface ElementPropsBase {
   isSelected: boolean;
-  onClick: (e: any) => void;
-  onMouseDown?: (e: any) => void;
-  onDragMove?: (e: any) => void;
-  onDragEnd?: (e: any) => void;
+  onClick: (e: KonvaEventObject<MouseEvent>) => void;
+  onMouseDown?: (e: KonvaEventObject<MouseEvent>) => void;
+  onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
+  onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
 }
 
 export interface CropableImageProps extends ElementPropsBase {

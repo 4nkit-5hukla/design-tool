@@ -21,23 +21,19 @@ args = "Frontend"
 name = "Frontend"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[ports]]
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 39085
-externalPort = 3000
-
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npx", "vite", "preview", "--host", "0.0.0.0", "--port"]
+run = ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "5000"]
 build = ["npm", "run", "build"]

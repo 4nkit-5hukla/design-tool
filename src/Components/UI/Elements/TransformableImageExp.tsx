@@ -1,4 +1,5 @@
 import {
+  FC,
   Fragment,
   // useEffect, useState,
   useRef,
@@ -6,10 +7,24 @@ import {
 import { Group, Image, Rect, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
 
-export const TransformableImageExp = ({
+interface TransformableImageExpProps {
+  onDragStart: (element: Konva.ShapeConfig) => void;
+  onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  onTransform: (e: Record<string, unknown>) => void;
+  onClick: (e: KonvaEventObject<MouseEvent>) => void;
+  isSelected: boolean;
+  src: Konva.ImageConfig["image"];
+  maxWidth: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  [key: string]: unknown;
+}
+
+export const TransformableImageExp: FC<TransformableImageExpProps> = ({
   onDragStart,
   onDragEnd,
   onClick,
@@ -26,17 +41,6 @@ export const TransformableImageExp = ({
   canvasHeight,
   canvasWidth,
   ...props
-}: {
-  onDragStart: (element: Konva.ShapeConfig) => void;
-  onDragEnd: (e: any) => void;
-  onTransform: (e: any) => void;
-  onClick: (e: any) => void;
-  isSelected: boolean;
-  src: Konva.ImageConfig["image"];
-  maxWidth: number;
-  [key: string]: any;
-  canvasWidth: number;
-  canvasHeight: number;
 }) => {
   // const [height, setHeight] = useState<number>(0);
   // const [width, setWidth] = useState<number>(0);

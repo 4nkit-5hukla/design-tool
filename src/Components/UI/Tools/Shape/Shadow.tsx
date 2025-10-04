@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
 
 import { useElementsContext } from "Contexts/Elements";
@@ -9,7 +9,7 @@ import { OffsetV } from "./Shadow/OffsetV";
 import { Opacity } from "./Shadow/Opacity";
 import { UseShadow } from "./Shadow/UseShadow";
 
-const ShapeShadow = () => {
+const ShapeShadow: FC = () => {
   const { selectedEl, updateElement } = useElementsContext();
   const [shadowEnabled, setShadowEnabled] = useState<boolean>(false);
 

@@ -1,13 +1,14 @@
-import { Fragment, MouseEvent, useEffect, useState } from "react";
+import { FC, Fragment, MouseEvent, useEffect, useState } from "react";
 
 import { Box, Button, Popover, Typography } from "@mui/material";
-import { ChromePicker } from "react-color";
+import { ChromePicker, ColorResult } from "react-color";
+import { StrokeProps } from "Interfaces/ComponentProps";
 
-export const StrokeColor = ({
+export const StrokeColor: FC<StrokeProps> = ({
   strokeEnabled,
   selectedEl,
   updateElement,
-}: any) => {
+}) => {
   const [strokeColor, setStrokeColor] = useState<string>("#000000");
   const [changeColorEl, setChangeColorEl] = useState<HTMLButtonElement | null>(
     null
@@ -103,12 +104,12 @@ export const StrokeColor = ({
         <ChromePicker
           color={strokeColor}
           disableAlpha={true}
-          onChange={({ hex }: any) => {
-            setStrokeColor(`#${hex}`);
+          onChange={(color: ColorResult) => {
+            setStrokeColor(color.hex);
             updateElement(
               {
                 id: selectedEl.id,
-                stroke: `#${hex}`,
+                stroke: color.hex,
               },
               { saveHistory: false }
             );

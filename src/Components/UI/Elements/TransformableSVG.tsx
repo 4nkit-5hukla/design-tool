@@ -1,13 +1,28 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { Fragment, useEffect, useRef } from "react";
+import { FC, Fragment, useEffect, useRef } from "react";
 import { Group, Path, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
 import svgpath from "svgpath";
 
 import { useTransformer } from "Hooks";
 
-export const TransformableSVG = ({
+interface TransformableSVGProps {
+  onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  onTransform: (e: Record<string, unknown>) => void;
+  onClick: (e: KonvaEventObject<MouseEvent>) => void;
+  onMouseDown?: (e: KonvaEventObject<MouseEvent>) => void;
+  onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
+  isSelected: boolean;
+  name: string;
+  lock?: boolean;
+  draggable: boolean;
+  height: number;
+  width: number;
+  [key: string]: unknown;
+}
+
+export const TransformableSVG: FC<TransformableSVGProps> = ({
   onClick,
   onMouseDown,
   onDragMove,
@@ -20,20 +35,13 @@ export const TransformableSVG = ({
   height,
   width,
   ...props
-}: {
-  // onDragStart: (shape: Konva.ShapeConfig) => void;
-  onDragEnd: (e: any) => void;
-  onTransform: (e: any) => void;
-  onClick: (e: any) => void;
-  isSelected: boolean;
-  [key: string]: any;
 }) => {
   const rootGroupRef = useRef<Konva.Group | any>();
   const transformerRef = useRef<Konva.Transformer | any>();
-  const mapCallBack = ({ type, ...rest }: any, index: number) =>
+  const mapCallBack = ({ type, ...rest }: { type: string; [key: string]: unknown }, index: number) =>
     type === "group"
       ? ((
-          { descendants, globalCompositeOperation, ...groupProps }: any,
+          { descendants, globalCompositeOperation, ...groupProps }: { descendants: unknown[]; globalCompositeOperation?: string; [key: string]: unknown },
           x: number = 0,
           y: number = 0
         ) => (
@@ -46,7 +54,7 @@ export const TransformableSVG = ({
             {descendants.map(mapCallBack)}
           </Group>
         ))(rest)
-      : (({ d, ...pathProps }: any, x: number = 0, y: number = 0) => (
+      : (({ d, ...pathProps }: { d: string; [key: string]: unknown }, x: number = 0, y: number = 0) => (
           <Path
             key={index}
             data={svgpath(d).scale(2).toString()}

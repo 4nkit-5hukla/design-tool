@@ -1,6 +1,9 @@
-import { useRef, useState } from "react";
+import { FC, useRef, useState } from "react";
 import { Image, Rect, Transformer, Group, Path } from "react-konva";
 import SVGPathCommander from "svg-path-commander";
+import { KonvaEventObject } from "konva/lib/Node";
+
+import { ClippedImageProps, ClippedImageElementState } from "Interfaces";
 
 const Anchor = {
   none: 0,
@@ -10,7 +13,7 @@ const Anchor = {
   bottomRight: 8,
 };
 
-export function ClippedImage({
+export const ClippedImage: FC<ClippedImageProps> = ({
   state,
   setState,
   isSelected,
@@ -18,7 +21,7 @@ export function ClippedImage({
   onDragMove,
   onDragEnd,
   onMouseDown,
-}) {
+}) => {
   const [activeAnchor, setActiveAnchor] = useState(Anchor.none);
 
   // refs
@@ -82,7 +85,7 @@ export function ClippedImage({
 
   const clipFuncHelper = new ClipFuncHelper(state);
 
-  const getRadSinCos = (state) => {
+  const getRadSinCos = (state: ClippedImageElementState) => {
     const rad = (state.rotation / 180) * Math.PI;
     return {
       rad,
@@ -123,7 +126,7 @@ export function ClippedImage({
     }
   };
 
-  const boundBoxFunc = (oldBox, newBox) => {
+  const boundBoxFunc = (oldBox: any, newBox: any) => {
     const { cos } = getRadSinCos(state);
     if (newBox.width < 10 || newBox.height < 10) return oldBox;
     if (!isClipping) return newBox;
@@ -170,7 +173,7 @@ export function ClippedImage({
   };
 
   // events
-  const groupOnClick = (e) => {
+  const groupOnClick = (e: KonvaEventObject<MouseEvent>) => {
     onClick(e);
   };
 
@@ -178,7 +181,7 @@ export function ClippedImage({
     setState({ ...state, isClipping: !state.isClipping });
   };
 
-  const groupOnDragMove = (ev) => {
+  const groupOnDragMove = (ev: KonvaEventObject<DragEvent>) => {
     onDragMove(ev);
     if (!isClipping) shadow.setAttrs({ visible: false });
     const dx = ev.target.x();
@@ -231,7 +234,7 @@ export function ClippedImage({
     });
   };
 
-  const groupOnDragEnd = (ev) => {
+  const groupOnDragEnd = (ev: KonvaEventObject<DragEvent>) => {
     onDragEnd(ev);
     if (!isClipping) shadow.setAttrs({ visible: true });
     ev.target.setAttrs({ x: 0, y: 0 });
@@ -280,7 +283,7 @@ export function ClippedImage({
   };
 
   // render helpers
-  const rectProps = (state) => {
+  const rectProps = (state: ClippedImageElementState) => {
     if (isClipping) {
       return imageProps(state);
     } else {
@@ -298,7 +301,7 @@ export function ClippedImage({
     }
   };
 
-  const imageProps = (state) => {
+  const imageProps = (state: ClippedImageElementState) => {
     const {
       shapeX,
       shapeY,
@@ -460,9 +463,9 @@ export function ClippedImage({
       </Group>
     </>
   );
-}
+};
 
-export function flipClippedImage(element, orientation) {
+export function flipClippedImage(element: ClippedImageElementState, orientation: string): ClippedImageElementState {
   const { flipX, flipY, imageDeltaX, imageDeltaY } = element;
   if (orientation === "vertical") {
     return {
@@ -479,17 +482,17 @@ export function flipClippedImage(element, orientation) {
   }
 }
 
-export function reversePath(path) {
+export function reversePath(path: string): string {
   return SVGPathCommander.reversePath(path).toString().replaceAll(",", " ");
 }
 
 export class ClipFuncHelper {
-  path;
-  reversePath;
-  width;
-  height;
+  path: any;
+  reversePath: any;
+  width: number;
+  height: number;
 
-  constructor({ svgPath, shapeElement, flipX, flipY }) {
+  constructor({ svgPath, shapeElement, flipX, flipY }: { svgPath: string; shapeElement: { width: number; height: number }; flipX?: boolean; flipY?: boolean }) {
     this.width = shapeElement.width;
     this.height = shapeElement.height;
     const path1 = SVGPathCommander.normalizePath(svgPath);
@@ -505,13 +508,13 @@ export class ClipFuncHelper {
     }
   }
 
-  group(state, isClipping) {
+  group(state: ClippedImageElementState, isClipping: boolean) {
     if (isClipping) return;
     const { shapeX, shapeY, shapeWidth, shapeHeight, rotation } = state;
     const rad = (rotation / 180) * Math.PI;
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
-    const point = (x, y) => {
+    const point = (x: number, y: number): [number, number] => {
       x = ((x - this.width / 2) * shapeWidth) / this.width;
       y = ((y - this.height / 2) * shapeHeight) / this.height;
       if (state.flipX) x = -x;
@@ -528,12 +531,12 @@ export class ClipFuncHelper {
     };
   }
 
-  darker(state, imageProps) {
+  darker(state: ClippedImageElementState, imageProps: any) {
     const { shapeX, shapeY, shapeWidth, shapeHeight, rotation } = state;
     const rad = (rotation / 180) * Math.PI;
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
-    const point = (x, y) => {
+    const point = (x: number, y: number): [number, number] => {
       x = ((x - this.width / 2) * shapeWidth) / this.width;
       y = ((y - this.height / 2) * shapeHeight) / this.height;
       if (state.flipX) x = -x;
@@ -566,20 +569,20 @@ export class ClipFuncHelper {
     };
   }
 
-  commands(ctx, point) {
+  commands(ctx: any, point: (x: number, y: number) => [number, number]) {
     return {
-      M: (x, y) => ctx.moveTo(...point(x, y)),
-      L: (x, y) => ctx.lineTo(...point(x, y)),
-      C: (x1, y1, x2, y2, x, y) =>
+      M: (x: number, y: number) => ctx.moveTo(...point(x, y)),
+      L: (x: number, y: number) => ctx.lineTo(...point(x, y)),
+      C: (x1: number, y1: number, x2: number, y2: number, x: number, y: number) =>
         ctx.bezierCurveTo(...point(x1, y1), ...point(x2, y2), ...point(x, y)),
-      Q: (x1, y1, x, y) =>
+      Q: (x1: number, y1: number, x: number, y: number) =>
         ctx.quadraticCurveTo(...point(x1, y1), ...point(x, y)),
       Z: () => ctx.closePath(),
     };
   }
 }
 
-export function alignClippedImage(element, canvas, align) {
+export function alignClippedImage(element: ClippedImageElementState, canvas: { width: number; height: number }, align: string) {
   const [center, ...rest] = vertices(element);
   const cx = center.x;
   const cy = center.y;
@@ -596,11 +599,11 @@ export function alignClippedImage(element, canvas, align) {
   return { id: element.id, shapeX, shapeY };
 }
 
-function vertices(element) {
+function vertices(element: ClippedImageElementState) {
   const { rotation, shapeX: x, shapeY: y, shapeWidth, shapeHeight } = element;
   const cos = Math.cos((rotation / 180) * Math.PI);
   const sin = Math.sin((rotation / 180) * Math.PI);
-  const absXY = (dx, dy) => ({
+  const absXY = (dx: number, dy: number) => ({
     x: x + dx * cos - dy * sin,
     y: y + dx * sin + dy * cos,
   });

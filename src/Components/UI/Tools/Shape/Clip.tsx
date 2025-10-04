@@ -1,8 +1,9 @@
+import { FC } from "react";
 import { Masonry } from "@mui/lab";
 import { Box, Button, Card, CardMedia, Typography } from "@mui/material";
 import { useElementsContext } from "Contexts/Elements";
 
-const ShapeClip = () => {
+const ShapeClip: FC = () => {
   const { selectedEl } = useElementsContext();
   const { updateElement } = useElementsContext();
 

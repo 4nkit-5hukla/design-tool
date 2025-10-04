@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { FC, useRef } from "react";
 import { Rect, Transformer } from "react-konva";
 import Konva from "konva";
 
@@ -20,7 +20,7 @@ interface MultiSelectProps {
   lock?: boolean;
 }
 
-export function MultiSelect({
+export const MultiSelect: FC<MultiSelectProps> = ({
   rotation,
   x,
   y,
@@ -36,7 +36,7 @@ export function MultiSelect({
   rectOnDragMove,
   rectOnDragEnd,
   lock = false,
-}: MultiSelectProps) {
+}) => {
   const transformerRef = useRef<Konva.Transformer>(null);
   const rectRef = useRef<Konva.Rect>(null);
   
@@ -93,4 +93,4 @@ export function MultiSelect({
       />
     </>
   );
-}
+};

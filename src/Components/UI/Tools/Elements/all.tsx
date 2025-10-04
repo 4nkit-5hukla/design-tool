@@ -13,7 +13,9 @@ const AllElements = () => {
     try {
       const result = await AuthenticatedReq("/element/featured_elements");
       // const result = await AuthenticatedReq("/featured.json");
-      setFeaturedElements(result.data.payload);
+      if (result.data && result.data.payload) {
+        setFeaturedElements(result.data.payload);
+      }
     } catch (error) {
       console.error(error);
     }

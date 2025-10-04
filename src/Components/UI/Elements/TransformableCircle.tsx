@@ -1,27 +1,29 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { Fragment, useRef } from "react";
+import { FC, Fragment, useRef } from "react";
 import { Ellipse, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
 
-const TransformableCircle = ({
+interface TransformableCircleProps {
+  onDragStart: (shape: Konva.ShapeConfig) => void;
+  onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  onTransform: (e: Record<string, number>) => void;
+  onClick: (e: KonvaEventObject<MouseEvent>) => void;
+  isSelected: boolean;
+  radiusX: number;
+  radiusY: number;
+  [key: string]: unknown;
+}
+
+const TransformableCircle: FC<TransformableCircleProps> = ({
   onDragStart,
   onDragEnd,
   onClick,
   onTransform,
   isSelected,
   ...props
-}: {
-  onDragStart: (shape: Konva.ShapeConfig) => void;
-  onDragEnd: (e: any) => void;
-  onTransform: (e: any) => void;
-  onClick: (e: any) => void;
-  isSelected: boolean;
-  radiusX: number;
-  radiusY: number;
-  [key: string]: any;
 }) => {
   const circleRef = useRef<Konva.Ellipse | any>();
   const transformerRef = useRef<Konva.Transformer | any>();

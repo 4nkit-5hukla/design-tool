@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Box, Slider, TextField, Typography } from "@mui/material";
 
 import { useAppState } from "Contexts/AppState";
+import { ShadowProps } from "Interfaces/ComponentProps";
 
-export const OffsetV = ({ shadowEnabled, selectedEl, updateElement }: any) => {
+export const OffsetV: FC<ShadowProps> = ({ shadowEnabled, selectedEl, updateElement }) => {
   const { toggleEditingData } = useAppState();
   const [offsetY, setOffsetY] = useState<number>(0);
 
@@ -86,11 +87,12 @@ export const OffsetV = ({ shadowEnabled, selectedEl, updateElement }: any) => {
         min={-10}
         max={10}
         className={offsetY < 0 ? "value-negative" : "value-positive"}
-        onChange={(event: Event, newValue: any) => {
+        onChange={(event: Event, newValue: number | number[]) => {
+          const values = Array.isArray(newValue) ? newValue : [newValue];
           const value =
-            (newValue[0] as number) !== 0
-              ? (newValue[0] as number)
-              : (newValue[1] as number);
+            values[0] !== 0
+              ? values[0]
+              : values[1];
           updateElement(
             { ...selectedEl, shadowOffsetY: value },
             { saveHistory: false }

@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import { Box, Slider, TextField, Typography } from "@mui/material";
 
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
 
-const Blue = () => {
+const Blue: FC = () => {
   const { toggleEditingData } = useAppState();
   const { selectedEl, updateElement } = useElementsContext();
   const [blue, setBlue] = useState<number>(0);
@@ -84,8 +84,8 @@ const Blue = () => {
         step={1}
         min={0}
         max={255}
-        onChange={(event: Event, newValue: any) => {
-          const value = newValue as number;
+        onChange={(event: Event, newValue: number | number[]) => {
+          const value = Array.isArray(newValue) ? newValue[0] : newValue;
           updateElement({ ...selectedEl, blue: value }, { saveHistory: false });
           setBlue(value);
         }}

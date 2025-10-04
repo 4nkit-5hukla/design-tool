@@ -63,7 +63,9 @@ export default (args: ViteConfigInput) => {
       outDir: "build",
       chunkSizeWarningLimit: 5000,
       target: ["es2015", "safari11"], // Add iOS Safari compatibility
-      polyfillModulePreload: true,
+      modulePreload: {
+        polyfill: true,
+      },
       cssTarget: "safari11",
       rollupOptions: {
         onwarn(warning, warn) {
@@ -99,10 +101,7 @@ export default (args: ViteConfigInput) => {
       host: "0.0.0.0",
       port: 5000,
       hmr: true,
-      allowedHosts: [
-        ".replit.dev",
-        ".repl.co",
-      ],
+      allowedHosts: true,
     },
     css: {
       modules: {

@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import { Box, Slider, TextField, Typography } from "@mui/material";
 
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
 
-const Contrast = () => {
+const Contrast: FC = () => {
   const { toggleEditingData } = useAppState();
   const { selectedEl, updateElement } = useElementsContext();
   const [contrast, setContrast] = useState<number>(0);
@@ -86,11 +86,12 @@ const Contrast = () => {
         min={-10}
         max={10}
         className={contrast < 0 ? "value-negative" : "value-positive"}
-        onChange={(event: Event, newValue: any) => {
+        onChange={(event: Event, newValue: number | number[]) => {
+          const values = Array.isArray(newValue) ? newValue : [newValue];
           const value =
-            (newValue[0] as number) !== 0
-              ? (newValue[0] as number)
-              : (newValue[1] as number);
+            values[0] !== 0
+              ? values[0]
+              : values[1];
           updateElement(
             { ...selectedEl, contrast: value * 10 },
             { saveHistory: false }

@@ -1,4 +1,4 @@
-import { Fragment, MouseEvent, useState } from "react";
+import { FC, Fragment, MouseEvent, useState } from "react";
 import {
   Box,
   Button,
@@ -8,14 +8,14 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { ChromePicker } from "react-color";
+import { ChromePicker, ColorResult } from "react-color";
 import { Close, Cached } from "@mui/icons-material";
 
 import { swatchColor } from "Configs";
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
 
-const ShapeStroke = () => {
+const ShapeStroke: FC = () => {
   const [addColorEl, setAddColorEl] = useState<HTMLButtonElement | null>(null);
   const { currentColor, setEditTool, setCurrentColor, toggleEditSelected } =
     useAppState();
@@ -207,6 +207,7 @@ const ShapeStroke = () => {
               "#D9D9D9",
               "#FFFFFF",
             ].map((color, index) => (
+              // @ts-expect-error MUI v7 component prop typing issue
               <Box
                 border="1px solid #99999980"
                 borderRadius={0.125}
@@ -261,6 +262,7 @@ const ShapeStroke = () => {
             </Typography>
           </Box>
           <Box gap={1.225} marginBottom={3.5} display="flex" flexWrap="wrap">
+              // @ts-expect-error MUI v7 component prop typing issue
             {swatchColor.map((color, index) => (
               <Box
                 border="1px solid #99999980"
@@ -327,9 +329,8 @@ const ShapeStroke = () => {
         <ChromePicker
           color={currentColor}
           disableAlpha={true}
-          deferred={true}
-          onChange={({ hex }: any) => {
-            const newColor = `#${hex}`;
+          onChange={(color: ColorResult) => {
+            const newColor = color.hex;
             updateElement({
               id: selectedEl.id,
               stroke: newColor,

@@ -1,15 +1,29 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { Fragment, useEffect, useRef, useState } from "react";
+import { FC, Fragment, useEffect, useRef, useState } from "react";
 import { Group, Image, Rect, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
 
 import {
   // useElementCache,
   useTransformer,
 } from "Hooks";
 
-export const TransformableImage = ({
+interface TransformableImageProps {
+  onDragStart: (element: Konva.ShapeConfig) => void;
+  onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  onTransform: (e: Record<string, unknown>) => void;
+  onClick: (e: KonvaEventObject<MouseEvent>) => void;
+  isSelected: boolean;
+  src: Konva.ImageConfig["image"];
+  maxWidth: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  stage: Konva.Stage;
+  [key: string]: unknown;
+}
+
+export const TransformableImage: FC<TransformableImageProps> = ({
   onDragStart,
   onDragEnd,
   onClick,
@@ -38,18 +52,6 @@ export const TransformableImage = ({
   canvasHeight,
   stage,
   ...props
-}: {
-  onDragStart: (element: Konva.ShapeConfig) => void;
-  onDragEnd: (e: any) => void;
-  onTransform: (e: any) => void;
-  onClick: (e: any) => void;
-  isSelected: boolean;
-  src: Konva.ImageConfig["image"];
-  maxWidth: number;
-  [key: string]: any;
-  canvasWidth: number;
-  canvasHeight: number;
-  stage: any;
 }) => {
   const rootGroupRef = useRef<Konva.Group | any>();
   const imageRef = useRef<Konva.Image | any>();

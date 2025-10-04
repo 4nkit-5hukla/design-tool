@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import { Box, Slider, TextField, Typography } from "@mui/material";
 
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
+import { StrokeProps } from "Interfaces/ComponentProps";
 
-export const StrokeWidth = ({
+export const StrokeWidth: FC<StrokeProps> = ({
   strokeEnabled,
   selectedEl,
   updateElement,
-}: any) => {
+}) => {
   const { toggleEditingData } = useAppState();
   const { unSelect, setSelected } = useElementsContext();
   const [strokeWidth, setStrokeWidth] = useState<number>(0);
@@ -90,8 +91,8 @@ export const StrokeWidth = ({
         step={1}
         min={0}
         max={20}
-        onChange={(event: Event, newValue: any) => {
-          const value = newValue as number;
+        onChange={(event: Event, newValue: number | number[]) => {
+          const value = Array.isArray(newValue) ? newValue[0] : newValue;
           const { id } = selectedEl;
           updateElement({ id, strokeWidth: value }, { saveHistory: false });
           setStrokeWidth(value);
