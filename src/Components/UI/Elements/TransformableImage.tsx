@@ -53,9 +53,9 @@ export const TransformableImage: FC<TransformableImageProps> = ({
   stage,
   ...props
 }) => {
-  const rootGroupRef = useRef<Konva.Group | any>();
-  const imageRef = useRef<Konva.Image | any>();
-  const rectRef = useRef<Konva.Rect | any>();
+  const rootGroupRef = useRef<Konva.Group | null>(null);
+  const imageRef = useRef<Konva.Image | null>(null);
+  const rectRef = useRef<Konva.Rect | null>(null);
 
   const initialRectWidth = 250;
   const initialRectHeight = 200;
@@ -70,8 +70,8 @@ export const TransformableImage: FC<TransformableImageProps> = ({
   const [rectX, setRectX] = useState(canvasWidth - props.x);
   const [rectY, setRectY] = useState(canvasHeight - props.y);
 
-  const rootTransformerRef = useRef<Konva.Transformer | any>();
-  const rectTransformerRef = useRef<Konva.Transformer | any>();
+  const rootTransformerRef = useRef<Konva.Transformer | null>(null);
+  const rectTransformerRef = useRef<Konva.Transformer | null>(null);
 
   useTransformer({
     isSelected,
@@ -107,10 +107,14 @@ export const TransformableImage: FC<TransformableImageProps> = ({
   ]);
 
   useEffect(() => {
-    if (isSelected)
-      rootTransformerRef.current.findOne(".rotater").on("mouseenter", () => {
-        rootTransformerRef.current.getStage().content.style.cursor = `url("data:image/svg+xml,%3Csvg%20width%3D%2720%27%20height%3D%2720%27%20viewBox%3D%270%200%2020%2020%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cpath%20d%3D%27M11.8597%2017.3593L11.652%2017.395V17.6057V19.5921L5.12661%2016.2681L11.652%2012.9441V14.7281V15.0506L11.9643%2014.9702C14.9074%2014.2131%2017.0994%2011.7875%2017.0994%208.88374C17.0994%205.36349%2013.8862%202.54885%2010%202.54885C6.11384%202.54885%202.9006%205.36349%202.9006%208.88374C2.9006%209.73835%203.08658%2010.5636%203.45294%2011.3393L1.06179%2012.3371C0.52252%2011.2457%200.25%2010.0857%200.25%208.88383C0.250101%204.15038%204.59557%200.25%2010.0001%200.25C15.4046%200.25%2019.75%204.15038%2019.75%208.88383C19.75%2013.0601%2016.3711%2016.5844%2011.8597%2017.3593Z%27%20fill%3D%27%23fff%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.5%27%2F%3E%3C%2Fsvg%3E") 10 10, auto`;
-      });
+    if (isSelected && rootTransformerRef.current) {
+      const stage = rootTransformerRef.current.getStage();
+      const rotater = rootTransformerRef.current.findOne(".rotater");
+      if (rotater && stage)
+        rotater.on("mouseenter", () => {
+          stage.content.style.cursor = `url("data:image/svg+xml,%3Csvg%20width%3D%2720%27%20height%3D%2720%27%20viewBox%3D%270%200%2020%2020%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cpath%20d%3D%27M11.8597%2017.3593L11.652%2017.395V17.6057V19.5921L5.12661%2016.2681L11.652%2012.9441V14.7281V15.0506L11.9643%2014.9702C14.9074%2014.2131%2017.0994%2011.7875%2017.0994%208.88374C17.0994%205.36349%2013.8862%202.54885%2010%202.54885C6.11384%202.54885%202.9006%205.36349%202.9006%208.88374C2.9006%209.73835%203.08658%2010.5636%203.45294%2011.3393L1.06179%2012.3371C0.52252%2011.2457%200.25%2010.0857%200.25%208.88383C0.250101%204.15038%204.59557%200.25%2010.0001%200.25C15.4046%200.25%2019.75%204.15038%2019.75%208.88383C19.75%2013.0601%2016.3711%2016.5844%2011.8597%2017.3593Z%27%20fill%3D%27%23fff%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.5%27%2F%3E%3C%2Fsvg%3E") 10 10, auto`;
+        });
+    }
   }, [isSelected, rootTransformerRef]);
 
   // useElementCache({
@@ -156,17 +160,9 @@ export const TransformableImage: FC<TransformableImageProps> = ({
               clipFunc: (ctx: any) => {
                 const fakeShape = rectRef.current;
                 ctx.save();
-                ctx.translate(
-                  fakeShape.x() - canvasWidth / 2,
-                  fakeShape.y() - canvasHeight / 2
-                );
+                ctx.translate(fakeShape.x() - canvasWidth / 2, fakeShape.y() - canvasHeight / 2);
                 ctx.rotate((Konva as any).getAngle(fakeShape.rotation()));
-                ctx.rect(
-                  0,
-                  0,
-                  fakeShape.width() * fakeShape.scaleX(),
-                  fakeShape.height() * fakeShape.scaleY()
-                );
+                ctx.rect(0, 0, fakeShape.width() * fakeShape.scaleX(), fakeShape.height() * fakeShape.scaleY());
                 ctx.restore();
               },
             }
@@ -244,9 +240,7 @@ export const TransformableImage: FC<TransformableImageProps> = ({
               .map((_, i) => i * 90)}
             rotationSnapTolerance={10}
             enabledAnchors={
-              !lock && !isCropping && !isCropped
-                ? ["top-left", "top-right", "bottom-right", "bottom-left"]
-                : []
+              !lock && !isCropping && !isCropped ? ["top-left", "top-right", "bottom-right", "bottom-left"] : []
             }
           />
         </Portal>

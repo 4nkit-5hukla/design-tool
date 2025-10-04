@@ -1,8 +1,8 @@
-import { FC, Fragment, useRef, useEffect, useState } from "react";
+import Konva from "konva";
 import { Text, Transformer } from "react-konva";
 import { Html, Portal } from "react-konva-utils";
-import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
+import { FC, useRef, useEffect, useState } from "react";
 
 import { useTransformer } from "Hooks";
 import { useElementsContext } from "Contexts/Elements";
@@ -54,9 +54,9 @@ const EditableText: FC<EditableTextProps> = ({
 }) => {
   const { focused, setFocused, unFocus } = useElementsContext();
 
-  const elementRef = useRef<Konva.Text | any>();
-  const textareaRef = useRef<HTMLTextAreaElement | any>();
-  const transformerRef = useRef<Konva.Transformer | any>();
+  const elementRef = useRef<Konva.Text | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const transformerRef = useRef<Konva.Transformer | null>(null);
   // const [height, setHeight] = useState<number>(0);
   // const [width, setWidth] = useState<number>(0);
   const [created, setCreated] = useState<boolean>(false);
@@ -67,12 +67,12 @@ const EditableText: FC<EditableTextProps> = ({
         line.includes(`• `)
           ? line
           : line.includes(`${index + 1}. `)
-          ? line
-          : listType === "ul"
-          ? `• ${line}`
-          : listType === "ol"
-          ? `${index + 1}. ${line}`
-          : line
+            ? line
+            : listType === "ul"
+              ? `• ${line}`
+              : listType === "ol"
+                ? `${index + 1}. ${line}`
+                : line
       )
       .join("\n");
   const [divProps, setDivProps] = useState<any>({
@@ -109,10 +109,10 @@ const EditableText: FC<EditableTextProps> = ({
   const [textareaValue, setTextareaValue] = useState<string>(originValue);
 
   const getTextareaWidth = (width: number) => {
+    if (!elementRef.current) return;
     let newWidth = width;
     if (!newWidth) {
-      newWidth =
-        elementRef.current.text().length * elementRef.current.fontSize();
+      newWidth = elementRef.current.text().length * elementRef.current.fontSize();
     }
 
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -167,6 +167,7 @@ const EditableText: FC<EditableTextProps> = ({
   }, [focused]);
 
   const handleTextDblClick = (e: KonvaEventObject<MouseEvent>) => {
+    if (!elementRef.current) return;
     toggleEditText(true);
     elementRef.current.hide();
     // transformerRef.current.hide();
@@ -192,6 +193,7 @@ const EditableText: FC<EditableTextProps> = ({
     };
 
     const getTransform = () => {
+      if (!elementRef.current) return;
       const rotation = elementRef.current.rotation();
 
       let transform = "";
@@ -201,8 +203,7 @@ const EditableText: FC<EditableTextProps> = ({
 
       let px = 0;
 
-      const isFirefox =
-        navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
+      const isFirefox = navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
       if (isFirefox) {
         px += 2 + Math.round(elementRef.current.fontSize() / 20);
       }
@@ -214,12 +215,8 @@ const EditableText: FC<EditableTextProps> = ({
 
     updatedDivProps.style = {
       ...divProps.style,
-      width: `${
-        elementRef.current.width() - elementRef.current.padding() * 2
-      }px`,
-      height: `${
-        elementRef.current.height() - elementRef.current.padding() * 2 + 5
-      }px`,
+      width: `${elementRef.current.width() - elementRef.current.padding() * 2}px`,
+      height: `${elementRef.current.height() - elementRef.current.padding() * 2 + 5}px`,
       position: "absolute",
       display: "block",
       left: `${areaPosition.x}px`,
@@ -248,9 +245,7 @@ const EditableText: FC<EditableTextProps> = ({
             fontWeight: "bold",
           }
         : {}),
-      ...(elementRef.current.fontStyle() === "italic"
-        ? { fontStyle: "italic" }
-        : {}),
+      ...(elementRef.current.fontStyle() === "italic" ? { fontStyle: "italic" } : {}),
       ...(elementRef.current.textDecoration() === "underline"
         ? { textDecoration: "underline", textDecorationThickness: "from-font" }
         : {}),
@@ -260,7 +255,7 @@ const EditableText: FC<EditableTextProps> = ({
     setTextareaProps(updatedTextareaProps);
     setTextareaValue(elementRef.current.text());
 
-    textareaRef.current.focus();
+    if (textareaRef.current) textareaRef.current.focus();
   };
 
   const removeTextarea = () => {
@@ -274,6 +269,7 @@ const EditableText: FC<EditableTextProps> = ({
   };
 
   const onBlurHandler = () => {
+    if (!elementRef.current) return;
     removeTextarea();
     elementRef.current.show();
     unFocus();
@@ -281,24 +277,20 @@ const EditableText: FC<EditableTextProps> = ({
   };
 
   const onChangeHandler = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!elementRef.current) return;
+    if (!textareaRef.current) return;
     textareaRef.current.style.height = "auto";
 
-    textareaRef.current.style.height = `${
-      textareaRef.current.scrollHeight + elementRef.current.fontSize()
-    }px`;
+    textareaRef.current.style.height = `${textareaRef.current.scrollHeight + elementRef.current.fontSize()}px`;
 
     setDivProps({
       style: {
         ...divProps.style,
-        height: `${
-          textareaRef.current.scrollHeight + elementRef.current.fontSize()
-        }px`,
+        height: `${textareaRef.current.scrollHeight + elementRef.current.fontSize()}px`,
       },
     });
 
-    setTextareaValue(
-      useList ? applyList(e.target.value, listType) : e.target.value
-    );
+    setTextareaValue(useList ? applyList(e.target.value, listType) : e.target.value);
   };
 
   useEffect(() => {
@@ -309,9 +301,7 @@ const EditableText: FC<EditableTextProps> = ({
     setDivProps({
       style: {
         ...divProps.style,
-        height: `${
-          textareaRef.current.scrollHeight + elementRef.current.fontSize()
-        }px`,
+        height: `${textareaRef.current.scrollHeight + elementRef.current.fontSize()}px`,
       },
     });
   }, [textareaValue]);
@@ -324,7 +314,7 @@ const EditableText: FC<EditableTextProps> = ({
   }, [transformerRef]);
 
   return (
-    <Fragment>
+    <>
       <Text
         {...props}
         name={name}
@@ -341,10 +331,7 @@ const EditableText: FC<EditableTextProps> = ({
         onDragEnd={onDragEnd}
         onTransform={(e) => {
           const node = elementRef.current;
-          if (
-            Math.ceil(node.height() * node.scaleY()) ===
-            Math.ceil(node.height())
-          ) {
+          if (Math.ceil(node.height() * node.scaleY()) === Math.ceil(node.height())) {
             node.setAttrs({
               scaleX: 1,
               // scaleY: node.scaleY(),
@@ -393,16 +380,7 @@ const EditableText: FC<EditableTextProps> = ({
             rotationSnapTolerance={10}
             // keepRatio={false}
             enabledAnchors={
-              !lock
-                ? [
-                    "top-left",
-                    "top-right",
-                    "middle-right",
-                    "bottom-right",
-                    "bottom-left",
-                    "middle-left",
-                  ]
-                : []
+              !lock ? ["top-left", "top-right", "middle-right", "bottom-right", "bottom-left", "middle-left"] : []
             }
             boundBoxFunc={(oldBox, newBox) => ({
               ...newBox,
@@ -443,7 +421,7 @@ const EditableText: FC<EditableTextProps> = ({
           }}
         />
       </Html>
-    </Fragment>
+    </>
   );
 };
 

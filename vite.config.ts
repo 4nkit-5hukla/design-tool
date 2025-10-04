@@ -27,8 +27,8 @@ export default (args: ViteConfigInput) => {
 
   return defineConfig({
     plugins: [
-      react({ include: "**/*.tsx" }),
       nodePolyfills(),
+      react({ include: "**/*.tsx" }),
       viteTsconfigPaths(),
       envCompatible(),
       // ...(args.mode !== "production" ? [mkcert()] : []),

@@ -1,4 +1,5 @@
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext } from "react";
+import useUndo from "use-undo";
 import { ShapesHistory } from "Interfaces";
 import { useAppState } from "./AppState";
 
@@ -24,52 +25,57 @@ const HistoryContext = createContext<IHistoryContext>({
 
 const History = ({ children }: { children: ReactNode }) => {
   const { Provider: HistoryProvider } = HistoryContext;
-  const [history, setHistory] = useState<ShapesHistory[]>([[]]);
-  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  const [historyState, { set: setHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo }] = useUndo<ShapesHistory>([]);
   const { setMultiSelectIds, stageRef } = useAppState();
+
   const saveHistory = (state: ShapesHistory) => {
-    setHistory([...history.slice(0, historyIndex + 1), state]);
-
-    setHistoryIndex(historyIndex + 1);
+    setHistory(state);
   };
-  const canUndo = useMemo(
-    () => history.length > 0 && historyIndex > 0,
-    [history, historyIndex]
-  );
-  const canRedo = useMemo(
-    () => history.length > 0 && historyIndex < history.length - 1,
-    [history, historyIndex]
-  );
 
-  const fixTextShapes = (nextIndex: number) => {
-    history[historyIndex].forEach((element, i) => {
+  const fixTextShapes = (currentState: ShapesHistory, nextState: ShapesHistory) => {
+    currentState.forEach((element, i) => {
       if (element.type !== "text") return;
-      const next = history[nextIndex][i];
+      const next = nextState[i];
+      if (!next) return;
       const scale = next.fontSize / element.fontSize;
-      const shape = stageRef.current.find(`#${element.id}`)[0];
-      shape.setAttrs({
-        width: shape.width() * scale,
-        height: shape.height() * scale,
-      });
+      const shape = stageRef.current?.find(`#${element.id}`)?.[0];
+      if (shape) {
+        shape.setAttrs({
+          width: shape.width() * scale,
+          height: shape.height() * scale,
+        });
+      }
     });
   };
+
   const undo = () => {
-    if (!canUndo || historyIndex === 0) return;
-    fixTextShapes(historyIndex - 1);
+    if (!canUndo) return;
+    const nextState = historyState.past[historyState.past.length - 1];
+    if (nextState) {
+      fixTextShapes(historyState.present, nextState);
+    }
     setMultiSelectIds(new Set());
-    setHistoryIndex(historyIndex - 1);
+    undoHistory();
   };
+
   const redo = () => {
-    if (!canRedo || historyIndex === history.length - 1) return;
-    fixTextShapes(historyIndex + 1);
+    if (!canRedo) return;
+    const nextState = historyState.future[0];
+    if (nextState) {
+      fixTextShapes(historyState.present, nextState);
+    }
     setMultiSelectIds(new Set());
-    setHistoryIndex(historyIndex + 1);
+    redoHistory();
   };
 
   // providerValue
   const providerValue: IHistoryContext = {
-    history,
-    index: historyIndex,
+    history: [
+      ...historyState.past,
+      historyState.present,
+      ...historyState.future,
+    ],
+    index: historyState.past.length,
     canRedo,
     canUndo,
     redo,

@@ -19,8 +19,7 @@ export const useElements = () => {
 
   const { saveHistory, history, index: historyIndex } = useHistory();
 
-  const getElementById = (id: string) =>
-    elements.find((element) => element.id === id);
+  const getElementById = (id: string) => elements.find((element) => element.id === id);
 
   const updateElement = <T extends Konva.ShapeConfig>(
     config: T & { id: string },
@@ -108,21 +107,15 @@ export const useElements = () => {
           ...element,
           colors: JSON.stringify(element.data)
             .match(/#[0-9a-fA-F]{8}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}/gm)
-            ?.filter(
-              (color, index, allColors) => allColors.indexOf(color) === index
-            ),
+            ?.filter((color, index, allColors) => allColors.indexOf(color) === index),
           type: "flat-svg",
           scaleX: 1,
           scaleY: 1,
           scaled: { status: false, scaleX: 1, scaleY: 1 },
           height: elHeight,
           width: elWidth,
-          y:
-            element.y ??
-            Math.abs(Math.random() * (canvas.height - elHeight)) + elHeight,
-          x:
-            element.x ??
-            Math.abs(Math.random() * (canvas.width - elWidth)) + elWidth,
+          y: element.y ?? Math.abs(Math.random() * (canvas.height - elHeight)) + elHeight,
+          x: element.x ?? Math.abs(Math.random() * (canvas.width - elWidth)) + elWidth,
           fill: undefined,
         };
         break;
@@ -136,12 +129,8 @@ export const useElements = () => {
           scaled: { status: false, scaleX: 1, scaleY: 1 },
           height: elHeight,
           width: elWidth,
-          y:
-            element.y ??
-            Math.abs(Math.random() * (canvas.height - elHeight)) + elHeight,
-          x:
-            element.x ??
-            Math.abs(Math.random() * (canvas.width - elWidth)) + elWidth,
+          y: element.y ?? Math.abs(Math.random() * (canvas.height - elHeight)) + elHeight,
+          x: element.x ?? Math.abs(Math.random() * (canvas.width - elWidth)) + elWidth,
           fill: element.fill ?? defaultColor,
           stroke: "#000000",
           strokeWidth: 0,
@@ -248,9 +237,7 @@ export const useElements = () => {
   };
 
   const addElement = <T extends Konva.ShapeConfig>(element: T | T[]) => {
-    const created = (Array.isArray(element) ? element : [element]).map(
-      (option) => generateElement(option)
-    );
+    const created = (Array.isArray(element) ? element : [element]).map((option) => generateElement(option));
 
     setElements(elements.concat(created));
 
@@ -270,13 +257,12 @@ export const useElements = () => {
     return newElements;
   };
 
-  const multiSelected = (e: ShapeConfig) => multiSelectIds.has(e.id);
-  const notMultiSelected = (e: ShapeConfig) => !multiSelectIds.has(e.id);
+  const multiSelected = (e: ShapeConfig) => (e.id ? multiSelectIds.has(e.id) : false);
+  const notMultiSelected = (e: ShapeConfig) => !(e.id ? multiSelectIds.has(e.id) : false);
 
   const msPositions = () => {
     const firstSelectedIndex = elements.findIndex(multiSelected);
-    const lastSelectedIndex =
-      elements.length - 1 - [...elements].reverse().findIndex(multiSelected);
+    const lastSelectedIndex = elements.length - 1 - [...elements].reverse().findIndex(multiSelected);
     return {
       firstSelectedIndex,
       lastSelectedIndex,
@@ -382,10 +368,7 @@ export const useElements = () => {
     saveHistory(result);
   };
 
-  const duplicateElement = (
-    id: string,
-    avgMoveUnit: number
-  ): Konva.ShapeConfig => {
+  const duplicateElement = (id: string, avgMoveUnit: number): Konva.ShapeConfig => {
     const element: any = elements.find((item) => item.id === id);
     const created = {
       ...element,

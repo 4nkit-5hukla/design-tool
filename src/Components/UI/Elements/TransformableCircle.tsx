@@ -25,8 +25,8 @@ const TransformableCircle: FC<TransformableCircleProps> = ({
   isSelected,
   ...props
 }) => {
-  const circleRef = useRef<Konva.Ellipse | any>();
-  const transformerRef = useRef<Konva.Transformer | any>();
+  const circleRef = useRef<Konva.Ellipse | null>(null);
+  const transformerRef = useRef<Konva.Transformer | null>(null);
   const snaps = Array(24)
     .fill(0)
     .map((_, i) => i * 15);
@@ -49,6 +49,8 @@ const TransformableCircle: FC<TransformableCircleProps> = ({
         onDragEnd={(e) => onDragEnd(e)}
         onTransformEnd={(e) => {
           const node = circleRef.current;
+          if (!node) return;
+
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
           node.scaleX(1);

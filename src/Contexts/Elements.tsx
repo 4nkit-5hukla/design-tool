@@ -1,27 +1,12 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import Konva from "konva";
 
 import { useAppState } from "./AppState";
 import { useHistory } from "./History";
 
-import {
-  useDraggable,
-  useEventListener,
-  useElements,
-  useFocusable,
-  useZoom,
-  useStage,
-  useTool,
-} from "Hooks";
+import { useDraggable, useEventListener, useElements, useFocusable, useZoom, useStage, useTool } from "Hooks";
 
-import { alignMultiSelect2, } from "Hooks/useMultiSelect";
+import { alignMultiSelect2 } from "Hooks/useMultiSelect";
 import { Dispatch } from "react";
 import { SetStateAction } from "react";
 import { ShapeConfig } from "konva/lib/Shape";
@@ -29,7 +14,7 @@ import { ShapeConfig } from "konva/lib/Shape";
 interface IElementsContext {
   elements: Konva.ShapeConfig[];
   setElements: (elements: Konva.ShapeConfig[]) => void;
-  selectedEl: Konva.ShapeConfig | any;
+  selectedEl: Konva.ShapeConfig | null;
   selected: null | string;
   focused: null | string;
   draggable: boolean;
@@ -39,24 +24,19 @@ interface IElementsContext {
     config: T & { id: string },
     options?: { saveHistory: boolean }
   ) => Konva.ShapeConfig[];
-  updateElements: <T extends Konva.ShapeConfig>(
-    config: T[],
-    options?: { saveHistory: boolean }
-  ) => Konva.ShapeConfig[];
-  addElement: <T extends Konva.ShapeConfig>(
-    shape: T | T[]
-  ) => Konva.ShapeConfig[];
+  updateElements: <T extends Konva.ShapeConfig>(config: T[], options?: { saveHistory: boolean }) => Konva.ShapeConfig[];
+  addElement: <T extends Konva.ShapeConfig>(shape: T | T[]) => Konva.ShapeConfig[];
   duplicateElement: (id: string, avgMoveUnit: number) => Konva.ShapeConfig;
   designColors: string[] | undefined;
   designFonts: string[];
   removeElement: (id: string) => void;
-  onDragStart: (e: any, shape: Konva.ShapeConfig) => void;
+  onDragStart: (e: Konva.KonvaEventObject<DragEvent>, shape: Konva.ShapeConfig) => void;
   onDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void;
-  unSelect: (e?: any) => void;
-  unFocus: (e?: any) => void;
-  setSelected: (id: string | any) => void;
-  setFocused: (id: string | null) => void;
+  unSelect: () => void;
+  unFocus: () => void;
+  setSelected: (id: string) => void;
+  setFocused: (id: string) => void;
   toFront: (id: string) => void;
   toForward: (id: string) => void;
   toBack: (id: string) => void;
@@ -69,20 +49,20 @@ interface IElementsContext {
   zoom: number;
   canZoomIn: boolean;
   canZoomOut: boolean;
-  zoomIn: (e?: any) => void;
-  zoomOut: (e?: any) => void;
-  setZoom: (e?: any) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  setZoom: (zoom: number) => void;
   stageX: number;
-  setStageX: (e?: any) => void;
+  setStageX: (x: number) => void;
   stageY: number;
-  setStageY: (e?: any) => void;
+  setStageY: (y: number) => void;
 
   stage: Konva.Stage;
   setStage: (stage: Konva.Stage) => void;
   layer: Konva.Layer;
   setLayer: (layer: Konva.Layer) => void;
   usingTool: boolean;
-  toggleUsingTool: (e?: any) => void;
+  toggleUsingTool: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue = {
@@ -153,20 +133,11 @@ const defaultValue = {
 const ElementsContext = createContext<IElementsContext>(defaultValue);
 
 const Elements = ({ children }: { children: ReactNode }) => {
-  const {
-    editText,
-    editingData,
-    avgMoveUnit,
-    multiSelectIds,
-    setMultiSelectIds,
-    canvas,
-  } = useAppState();
+  const { editText, editingData, avgMoveUnit, multiSelectIds, setMultiSelectIds, canvas } = useAppState();
   const { Provider: ElementsProvider } = ElementsContext;
   const [loadingTemplate, setLoadingTemplate] = useState<boolean>(false);
   const [templateImage, setTemplateImage] = useState<string>("");
-  const [designColors, setDesignColors] = useState<string[] | undefined>(
-    undefined
-  );
+  const [designColors, setDesignColors] = useState<string[] | undefined>(undefined);
   const [designFonts, setDesignFonts] = useState<string[]>([]);
   const { canRedo, canUndo, redo, undo } = useHistory();
   const {
@@ -186,33 +157,17 @@ const Elements = ({ children }: { children: ReactNode }) => {
     getElementById,
   } = useElements();
 
-  const {
-    selected,
-    onDragStart,
-    onDragMove,
-    onDragEnd,
-    unSelect,
-    setSelected,
-    draggable,
-    setDraggable,
-  } = useDraggable({
-    updateElement,
-  });
+  const { selected, onDragStart, onDragMove, onDragEnd, unSelect, setSelected, draggable, setDraggable } = useDraggable(
+    {
+      updateElement,
+    }
+  );
 
   const { focused, setFocused, unFocus } = useFocusable();
 
-  const {
-    zoom,
-    canZoomIn,
-    canZoomOut,
-    zoomIn,
-    zoomOut,
-    setZoom,
-    stageX,
-    setStageX,
-    stageY,
-    setStageY,
-  } = useZoom({ origin: { x: canvas.width / 2, y: canvas.height / 2 } });
+  const { zoom, canZoomIn, canZoomOut, zoomIn, zoomOut, setZoom, stageX, setStageX, stageY, setStageY } = useZoom({
+    origin: { x: canvas.width / 2, y: canvas.height / 2 },
+  });
 
   const { usingTool, toggleUsingTool } = useTool();
 
@@ -275,9 +230,7 @@ const Elements = ({ children }: { children: ReactNode }) => {
       setDesignColors(
         JSON.stringify(elements)
           .match(/#[0-9a-fA-F]{8}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}/gm)
-          ?.filter(
-            (color, index, allColors) => allColors.indexOf(color) === index
-          )
+          ?.filter((color, index, allColors) => allColors.indexOf(color) === index)
           .sort()
       );
       setDesignFonts(
@@ -294,9 +247,7 @@ const Elements = ({ children }: { children: ReactNode }) => {
     const { key, ctrlKey, shiftKey, metaKey } = event;
     switch (key.toUpperCase()) {
       case "Z":
-        return shiftKey
-          ? (ctrlKey || metaKey) && canRedo && redo()
-          : (ctrlKey || metaKey) && canUndo && undo();
+        return shiftKey ? (ctrlKey || metaKey) && canRedo && redo() : (ctrlKey || metaKey) && canUndo && undo();
       case "Y":
         return (ctrlKey || metaKey) && canRedo && redo();
       case "V":
@@ -396,7 +347,7 @@ const Elements = ({ children }: { children: ReactNode }) => {
       const moveDistance = shiftKey ? avgMoveUnit / 2 : 1;
 
       const del = () => {
-        setElements(elements.filter((e) => !multiSelectIds.has(e.id)));
+        setElements(elements.filter((e) => (e.id ? !multiSelectIds.has(e.id) : false)));
         setMultiSelectIds(new Set());
       };
       const rect = stage ? stage.find(`#multiSelectRect`)[0] : undefined;
@@ -404,7 +355,8 @@ const Elements = ({ children }: { children: ReactNode }) => {
         rect.setAttrs({ x: rect.x() + dx, y: rect.y() + dy });
         setElements(
           elements.map((e) => {
-            if (!multiSelectIds.has(e.id)) return e;
+            const lookCondition = e.id ? !multiSelectIds.has(e.id) : false;
+            if (lookCondition) return e;
             return {
               ...e,
               x: (e.x ?? 0) + dx,
@@ -422,25 +374,22 @@ const Elements = ({ children }: { children: ReactNode }) => {
       };
       const groupUngroup = () => {
         const isGrouped = () => {
-          const findElement = (
-            elements: ShapeConfig[],
-            id: string
-          ): ShapeConfig => elements.find((e) => e.id === id) as ShapeConfig;
+          const findElement = (elements: ShapeConfig[], id: string): ShapeConfig =>
+            elements.find((e) => e.id === id) as ShapeConfig;
           const getElementGroup = (id: string) => {
             const element = findElement(elements, id);
             return element.group || [];
           };
-          const equal = (xs: number[], ys: number[]) =>
-            xs.length === ys.length && xs.every((x, i) => x === ys[i]);
-          const allEqual = (list: any[]) =>
-            list.reduce((a, b) => (equal(a, b) ? a : NaN));
+          const equal = (xs: number[], ys: number[]) => xs.length === ys.length && xs.every((x, i) => x === ys[i]);
+          const allEqual = (list: any[]) => list.reduce((a, b) => (equal(a, b) ? a : NaN));
           const groups = [...multiSelectIds].map(getElementGroup);
           return groups.length > 0 && allEqual(groups) && groups[0].length > 0;
         };
 
         const group = isGrouped() ? [] : [...multiSelectIds];
         const updateGroup = (e: ShapeConfig) => {
-          if (!multiSelectIds.has(e.id)) return e;
+          const lookCondition = e.id ? !multiSelectIds.has(e.id) : false;
+          if (lookCondition) return e;
           return {
             ...e,
             group,
@@ -539,8 +488,7 @@ const Elements = ({ children }: { children: ReactNode }) => {
 export const useElementsContext = () => {
   const context = useContext(ElementsContext);
 
-  if (!context)
-    throw Error("useElementsContext must be called from within the Elements");
+  if (!context) throw Error("useElementsContext must be called from within the Elements");
 
   return context;
 };

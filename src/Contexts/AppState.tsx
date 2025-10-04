@@ -1,11 +1,46 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { createContext, ReactNode, useContext, useRef, useState } from "react";
+import { createContext, ReactNode, useContext, useRef, useState, RefObject } from "react";
+import Konva from "konva";
 
 interface AppStateProps {
   children: ReactNode;
 }
 
-const AppContext = createContext<any>(null);
+interface FontMeta {
+  [key: string]: unknown;
+}
+
+interface AppStateContextType {
+  canvas: { width: number; height: number };
+  setCanvas: (canvas: { width: number; height: number }) => void;
+  avgMoveUnit: number;
+  rootRef: RefObject<HTMLDivElement | null>;
+  containerRef: RefObject<HTMLDivElement | null>;
+  stageRef: RefObject<Konva.Stage | null>;
+  editSelected: boolean;
+  toggleEditSelected: (value: boolean) => void;
+  editTool: string;
+  setEditTool: (tool: string) => void;
+  editText: boolean;
+  toggleEditText: (value: boolean) => void;
+  editingData: boolean;
+  toggleEditingData: (value: boolean) => void;
+  currentColor: string;
+  setCurrentColor: (color: string) => void;
+  useColorSet: string;
+  setColorSet: (colorSet: string) => void;
+  multiSelectIds: Set<string>;
+  setMultiSelectIds: (ids: Set<string>) => void;
+  viewCategory: string | number;
+  toggleViewCategory: (category: string | number) => void;
+  safeFonts: string[];
+  fontsMeta: FontMeta | undefined;
+  setFontsMeta: (meta: FontMeta) => void;
+  fontsData: unknown[];
+  setFontsData: (data: unknown[]) => void;
+}
+
+const AppContext = createContext<AppStateContextType | null>(null);
 
 const AppState = ({ children }: AppStateProps) => {
   const { Provider } = AppContext;
@@ -29,12 +64,12 @@ const AppState = ({ children }: AppStateProps) => {
     "Verdana",
   ];
   // Refs
-  const rootRef = useRef();
-  const containerRef = useRef();
-  const stageRef = useRef();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<Konva.Stage>(null);
   // States
-  const [fontsMeta, setFontsMeta] = useState<any>();
-  const [fontsData, setFontsData] = useState<any[]>([]);
+  const [fontsMeta, setFontsMeta] = useState<FontMeta | undefined>();
+  const [fontsData, setFontsData] = useState<unknown[]>([]);
   const [editSelected, toggleEditSelected] = useState<boolean>(false);
   const [editText, toggleEditText] = useState<boolean>(false);
   const [editingData, toggleEditingData] = useState<boolean>(false);
@@ -46,11 +81,11 @@ const AppState = ({ children }: AppStateProps) => {
     width: 1080,
     height: 1080,
   });
-  const [multiSelectIds, setMultiSelectIds] = useState<Set<String>>(
+  const [multiSelectIds, setMultiSelectIds] = useState<Set<string>>(
     () => new Set()
   );
   // providerValue
-  const providerValue = {
+  const providerValue: AppStateContextType = {
     canvas,
     setCanvas,
     avgMoveUnit: Math.floor((canvas.width + canvas.height) / 100),

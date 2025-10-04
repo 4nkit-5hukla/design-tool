@@ -23,8 +23,8 @@ const TransformableTriangle: FC<TransformableTriangleProps> = ({
   isSelected,
   ...props
 }) => {
-  const triangleRef = useRef<Konva.Path | any>();
-  const transformerRef = useRef<Konva.Transformer | any>();
+  const triangleRef = useRef<Konva.Path | null>(null);
+  const transformerRef = useRef<Konva.Transformer | null>(null);
   const snaps = Array(12)
     .fill(0)
     .map((_, i) => i * 30);

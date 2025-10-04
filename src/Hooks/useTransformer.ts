@@ -1,15 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Konva from "konva";
-import { MutableRefObject, useEffect } from "react";
+import { RefObject, useEffect } from "react";
 
-export const useTransformer = <T extends Konva.Shape>({
+export const useTransformer = <T>({
   isSelected,
   ref,
   transformer,
 }: {
   isSelected: boolean;
-  ref: MutableRefObject<T>;
-  transformer: MutableRefObject<Konva.Transformer> | any;
+  ref: RefObject<T>;
+  transformer: RefObject<Konva.Transformer> | any;
 }) => {
   useEffect(() => {
     if (transformer.current !== null && isSelected) {
