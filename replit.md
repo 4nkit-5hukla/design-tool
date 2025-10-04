@@ -1,6 +1,7 @@
 # Easy Design Tool
 
 ## Overview
+
 A web-based graphic design tool built with React, TypeScript, and Konva. This application provides a user-friendly interface for creating designs with images, text, shapes, and SVG elements - similar to Canva.
 
 **Current Status**: Successfully imported and configured for Replit environment  
@@ -9,6 +10,7 @@ A web-based graphic design tool built with React, TypeScript, and Konva. This ap
 ## Project Architecture
 
 ### Tech Stack
+
 - **Frontend Framework**: React 19 with TypeScript
 - **Build Tool**: Vite 7
 - **Canvas Library**: Konva (React-Konva)
@@ -17,6 +19,7 @@ A web-based graphic design tool built with React, TypeScript, and Konva. This ap
 - **State Management**: React Context API
 
 ### Key Features
+
 - Drag-and-drop canvas interface
 - Multi-element selection and transformation
 - Text editing with custom fonts (Google Fonts integration)
@@ -28,10 +31,11 @@ A web-based graphic design tool built with React, TypeScript, and Konva. This ap
 - Export/save functionality
 
 ### Project Structure
-```
+
+```bash
 src/
-├── Assets/           # Icons and shape components
-├── Components/       # React components
+├── Assets/          # Icons and shape components
+├── Components/      # React components
 │   ├── UI/          # UI components (toolbar, tools, elements)
 │   └── Utils/       # Utility components
 ├── Configs/         # Configuration and theme
@@ -46,6 +50,7 @@ src/
 ## Recent Changes
 
 ### October 4, 2025 - TypeScript Migration & Package Updates
+
 - **TypeScript Conversion**: Converted all JavaScript files to TypeScript
   - `MultiSelect.jsx` → `MultiSelect.tsx` with proper prop types
   - `CropableImage.jsx` → `CropableImage.tsx` with type annotations
@@ -81,6 +86,7 @@ src/
   - No peer dependency conflicts
 
 ### October 4, 2025 - Replit Environment Setup (GitHub Import)
+
 - Successfully imported project from GitHub to Replit
 - Installed Node.js 20 and all npm dependencies (473 packages)
 - Fixed dependency conflicts:
@@ -99,19 +105,25 @@ src/
 ## Development
 
 ### Running Locally
+
 The development server runs automatically via the configured workflow:
+
 ```bash
 npm run dev
 ```
+
 The app will be available at `http://localhost:5000`
 
 ### Building for Production
+
 ```bash
 npm run build
 ```
+
 Output directory: `build/`
 
 ### Available Scripts
+
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run lint` - Run ESLint
@@ -121,26 +133,33 @@ Output directory: `build/`
 ## Configuration Notes
 
 ### Environment Variables
+
 The project uses `REACT_APP_` prefix for environment variables (configured in `vite.config.ts`).
 
 To use Unsplash images, you'll need to set:
+
 - `REACT_APP_UNSPLASH_ACCESS_KEY`
 
 ### Dependency Notes
+
 - All packages are now on latest versions with full compatibility
 - No longer requires `--legacy-peer-deps` flag
 - Uses `react-color` instead of `mui-color` for color picking functionality
 - Node modules and lock files are gitignored
 
 ## Known Issues
+
 - Unsplash API calls return 401 without proper API key configuration (expected behavior - requires REACT_APP_UNSPLASH_ACCESS_KEY)
 - Minor TypeScript LSP diagnostics in some files (non-breaking, cosmetic type improvements pending)
 
 ## User Preferences
+
 None configured yet.
 
 ## Deployment
+
 The app is configured for Replit autoscale deployment:
+
 - Build command: `npm run build`
 - Run command: `npx vite preview --host 0.0.0.0 --port 5000`
 - Type: Autoscale (stateless, scales to zero when not in use)
