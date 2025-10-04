@@ -1,5 +1,24 @@
 import { useRef } from "react";
 import { Rect, Transformer } from "react-konva";
+import Konva from "konva";
+
+interface MultiSelectProps {
+  rotation: number;
+  x: number;
+  y: number;
+  offsetX: number;
+  offsetY: number;
+  scaleX: number;
+  scaleY: number;
+  width: number;
+  height: number;
+  visible: boolean;
+  rectOnTransform?: (e: Konva.KonvaEventObject<Event>) => void;
+  rectOnTransformEnd?: (e: Konva.KonvaEventObject<Event>) => void;
+  rectOnDragMove?: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  rectOnDragEnd?: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  lock?: boolean;
+}
 
 export function MultiSelect({
   rotation,
@@ -16,32 +35,35 @@ export function MultiSelect({
   rectOnTransformEnd,
   rectOnDragMove,
   rectOnDragEnd,
-  lock,
-}) {
-  // refs
-  const refs = {
-    transformer: useRef(null),
-    rect: useRef(null),
-  };
-  const refsReady = Object.values(refs).every((ref) => ref.current);
-  const transformer = refs.transformer.current;
-  const rect = refs.rect.current;
+  lock = false,
+}: MultiSelectProps) {
+  const transformerRef = useRef<Konva.Transformer>(null);
+  const rectRef = useRef<Konva.Rect>(null);
+  
+  const refsReady = transformerRef.current && rectRef.current;
+  const transformer = transformerRef.current;
+  const rect = rectRef.current;
+  
   if (refsReady) {
     transformer.moveToTop();
-    if (transformer.nodes().length === 0) transformer.nodes([rect]);
+    if (transformer.nodes().length === 0) {
+      transformer.nodes([rect]);
+    }
   }
 
-  if (!visible)
+  if (!visible) {
     return (
       <>
-        <Rect ref={refs.rect} />
-        <Transformer ref={refs.transformer} visible={false} />
+        <Rect ref={rectRef} />
+        <Transformer ref={transformerRef} visible={false} />
       </>
     );
+  }
+  
   return (
     <>
       <Rect
-        ref={refs.rect}
+        ref={rectRef}
         id="multiSelectRect"
         rotation={rotation}
         x={x}
@@ -59,7 +81,7 @@ export function MultiSelect({
         onDragEnd={rectOnDragEnd}
       />
       <Transformer
-        ref={refs.transformer}
+        ref={transformerRef}
         id="multiSelectTransformer"
         enabledAnchors={
           lock ? [] : ["top-left", "top-right", "bottom-left", "bottom-right"]

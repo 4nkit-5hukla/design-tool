@@ -11,7 +11,7 @@ export * from "./useZoom";
 export * from "./useStage";
 export * from "./useTransformer";
 export * from "./useElementCache";
-// export * from "./useMultiSelect";
+export * from "./useMultiSelect";
 export * from "./useFilter";
 export * from "./useStorage";
 export * from "./useTool";

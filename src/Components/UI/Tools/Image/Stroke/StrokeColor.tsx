@@ -1,7 +1,7 @@
 import { Fragment, MouseEvent, useEffect, useState } from "react";
 
 import { Box, Button, Popover, Typography } from "@mui/material";
-import { ColorBox } from "mui-color";
+import { ChromePicker } from "react-color";
 
 export const StrokeColor = ({
   strokeEnabled,
@@ -100,8 +100,8 @@ export const StrokeColor = ({
           },
         }}
       >
-        <ColorBox
-          value={strokeColor}
+        <ChromePicker
+          color={strokeColor}
           disableAlpha={true}
           onChange={({ hex }: any) => {
             setStrokeColor(`#${hex}`);

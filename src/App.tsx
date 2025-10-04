@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 
@@ -14,13 +13,13 @@ const App = () => {
   };
 
   return (
-    <Fragment>
+    <>
       <GoogleFont fonts={[appFont]} />
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AppRouter />
       </ThemeProvider>
-    </Fragment>
+    </>
   );
 };
 

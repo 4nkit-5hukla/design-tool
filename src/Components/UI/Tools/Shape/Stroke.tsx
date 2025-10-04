@@ -8,7 +8,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { ColorBox } from "mui-color";
+import { ChromePicker } from "react-color";
 import { Close, Cached } from "@mui/icons-material";
 
 import { swatchColor } from "Configs";
@@ -217,7 +217,7 @@ const ShapeStroke = () => {
                 minWidth="initial"
                 justifyContent="center"
                 key={index}
-                value={color}
+                color={color}
                 onClick={() => switchColor(color)}
                 height={36}
                 width={36}
@@ -272,7 +272,7 @@ const ShapeStroke = () => {
                 minWidth="initial"
                 justifyContent="center"
                 key={index}
-                value={color}
+                color={color}
                 onClick={() => switchColor(color)}
                 height={36}
                 width={36}
@@ -324,8 +324,8 @@ const ShapeStroke = () => {
           },
         }}
       >
-        <ColorBox
-          value={currentColor}
+        <ChromePicker
+          color={currentColor}
           disableAlpha={true}
           deferred={true}
           onChange={({ hex }: any) => {

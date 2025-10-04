@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Fragment, MouseEvent, useEffect, useState } from "react";
 import { Box, Button, ToggleButton, Typography, Popover } from "@mui/material";
-import { ColorBox } from "mui-color";
+import { ChromePicker } from "react-color";
 
 import { swatchColor } from "Configs";
 import { useAppState } from "Contexts/AppState";
@@ -175,7 +175,7 @@ const TextColor = () => {
                   minWidth="initial"
                   justifyContent="center"
                   key={index}
-                  value={color}
+                  color={color}
                   selected={
                     useColorSet === "designColors" &&
                     designColors &&
@@ -242,7 +242,7 @@ const TextColor = () => {
                 minWidth="initial"
                 justifyContent="center"
                 key={index}
-                value={color}
+                color={color}
                 selected={
                   useColorSet === "brandColor" &&
                   brandColor[index] === selectedColor
@@ -301,7 +301,7 @@ const TextColor = () => {
                 minWidth="initial"
                 justifyContent="center"
                 key={index}
-                value={color}
+                color={color}
                 selected={
                   useColorSet === "swatchColor" &&
                   swatchColor[index] === selectedColor
@@ -361,15 +361,15 @@ const TextColor = () => {
           },
         }}
       >
-        <ColorBox
-          value={selectedColor}
+        <ChromePicker
+          color={selectedColor}
           disableAlpha={true}
-          onChange={({ hex }: any) => {
-            setSelectedColor(`#${hex}`);
+          onChange={(color) => {
+            setSelectedColor(color.hex);
             updateElement(
               {
                 id: selectedEl.id,
-                fill: `#${hex}`,
+                fill: color.hex,
               },
               { saveHistory: false }
             );

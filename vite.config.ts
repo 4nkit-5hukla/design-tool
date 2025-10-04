@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import envCompatible from "vite-plugin-env-compatible";
-import mkcert from "vite-plugin-mkcert";
+// import mkcert from "vite-plugin-mkcert";
 import react from "@vitejs/plugin-react";
 import terser from "@rollup/plugin-terser";
 import viteTsconfigPaths from "vite-tsconfig-paths";
@@ -31,7 +31,7 @@ export default (args: ViteConfigInput) => {
       nodePolyfills(),
       viteTsconfigPaths(),
       envCompatible(),
-      ...(args.mode !== "production" ? [mkcert()] : []),
+      // ...(args.mode !== "production" ? [mkcert()] : []),
     ],
     // todo: resolve.alias not working properly still getting Cannot find module 'Contexts' or its corresponding type declarations
     resolve: {
@@ -95,9 +95,14 @@ export default (args: ViteConfigInput) => {
     },
     envPrefix: "REACT_APP_",
     server: {
-      open: false,
+      // open: false,
+      host: "0.0.0.0",
       port: 5000,
       hmr: true,
+      allowedHosts: [
+        ".replit.dev",
+        ".repl.co",
+      ],
     },
     css: {
       modules: {

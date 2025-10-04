@@ -8,7 +8,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { ColorBox } from "mui-color";
+import { ChromePicker } from "react-color";
 import { Close, Cached } from "@mui/icons-material";
 
 import { swatchColor } from "Configs";
@@ -267,7 +267,7 @@ const ShapeColor = () => {
                 minWidth="initial"
                 justifyContent="center"
                 key={index}
-                value={color}
+                color={color}
                 onClick={() => switchColor(color)}
                 height={36}
                 width={36}
@@ -322,7 +322,7 @@ const ShapeColor = () => {
                 minWidth="initial"
                 justifyContent="center"
                 key={index}
-                value={color}
+                color={color}
                 onClick={() => switchColor(color)}
                 height={36}
                 width={36}
@@ -378,8 +378,8 @@ const ShapeColor = () => {
           },
         }}
       >
-        <ColorBox
-          value={currentColor}
+        <ChromePicker
+          color={currentColor}
           disableAlpha={true}
           onChange={({ hex }: any) => {
             const newColor = `#${hex}`;

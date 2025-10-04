@@ -1,7 +1,7 @@
 import { Fragment, MouseEvent, useEffect, useState } from "react";
 
 import { Box, Button, Popover, Typography } from "@mui/material";
-import { ColorBox } from "mui-color";
+import { ChromePicker } from "react-color";
 
 export const Color = ({ shadowEnabled, selectedEl, updateElement }: any) => {
   const [shadowColor, setShadowColor] = useState<string>("#000000");
@@ -96,8 +96,8 @@ export const Color = ({ shadowEnabled, selectedEl, updateElement }: any) => {
           },
         }}
       >
-        <ColorBox
-          value={shadowColor}
+        <ChromePicker
+          color={shadowColor}
           disableAlpha={true}
           onChange={({ hex }: any) => {
             setShadowColor(`#${hex}`);
