@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import Konva from "konva";
 import { useEffect, useState } from "react";
 
 import { useId } from "Hooks";
@@ -8,12 +7,12 @@ import { useId } from "Hooks";
 
 import { useHistory } from "Contexts/History";
 import { useAppState } from "Contexts/AppState";
-import { ShapeConfig } from "konva/lib/Shape";
+import { CanvasElement } from "Interfaces/Elements";
 
 export const useElements = () => {
   const { canvas, multiSelectIds } = useAppState();
-  const [elements, setElements] = useState<Konva.ShapeConfig[]>([]);
-  const [copiedEl, setCopiedEl] = useState<Konva.ShapeConfig>();
+  const [elements, setElements] = useState<CanvasElement[]>([]);
+  const [copiedEl, setCopiedEl] = useState<CanvasElement>();
 
   const { generateId } = useId();
 
@@ -21,7 +20,7 @@ export const useElements = () => {
 
   const getElementById = (id: string) => elements.find((element) => element.id === id);
 
-  const updateElement = <T extends Konva.ShapeConfig>(
+  const updateElement = <T extends Partial<CanvasElement>>(
     config: T & { id: string },
     options: {
       saveHistory?: boolean;
@@ -48,7 +47,7 @@ export const useElements = () => {
     return updated;
   };
 
-  const updateElements = <T extends Konva.ShapeConfig>(
+  const updateElements = <T extends Partial<CanvasElement>>(
     configs: T[],
     options: {
       saveHistory?: boolean;
@@ -73,13 +72,13 @@ export const useElements = () => {
     return updated;
   };
 
-  const generateElement = <T extends Konva.ShapeConfig>(element: T) => {
+  const generateElement = <T extends Partial<CanvasElement>>(element: T) => {
     if ("filters" in element) {
-      delete element.filters;
+      delete (element as any).filters;
     }
 
     const defaultColor = "#649BB8";
-    let created: Konva.ShapeConfig = {
+    let created: any = {
       id: element.id ?? generateId(),
       draggable: true,
       lock: false,
@@ -97,15 +96,15 @@ export const useElements = () => {
       opacity: 1,
       fill: defaultColor,
     };
-    const elHeight = element.height ?? 100;
-    const elWidth = element.width ?? 100;
+    const elHeight = (element as any).height ?? 100;
+    const elWidth = (element as any).width ?? 100;
 
     switch (element.type) {
       case "flat-svg":
         created = {
           ...created,
           ...element,
-          colors: JSON.stringify(element.data)
+          colors: JSON.stringify((element as any).data)
             .match(/#[0-9a-fA-F]{8}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}/gm)
             ?.filter((color, index, allColors) => allColors.indexOf(color) === index),
           type: "flat-svg",
@@ -159,7 +158,6 @@ export const useElements = () => {
         };
         break;
       case "rectangle":
-      case "rect":
         created = {
           ...created,
           ...element,
@@ -190,7 +188,7 @@ export const useElements = () => {
           useList: false,
           listType: "", // "" or "ul" or "ol"
           align: element.align ?? "left",
-          wrap: element.wrap ?? "word",
+          wrap: (element as any).wrap ?? "word",
         };
         break;
       case "image":
@@ -236,8 +234,8 @@ export const useElements = () => {
     return created;
   };
 
-  const addElement = <T extends Konva.ShapeConfig>(element: T | T[]) => {
-    const created = (Array.isArray(element) ? element : [element]).map((option) => generateElement(option));
+  const addElement = <T extends CanvasElement>(element: T | T[]) => {
+    const created = (Array.isArray(element) ? element : [element]).map((option) => generateElement(option)) as CanvasElement[];
 
     setElements(elements.concat(created));
 
@@ -257,8 +255,8 @@ export const useElements = () => {
     return newElements;
   };
 
-  const multiSelected = (e: ShapeConfig) => (e.id ? multiSelectIds.has(e.id) : false);
-  const notMultiSelected = (e: ShapeConfig) => !(e.id ? multiSelectIds.has(e.id) : false);
+  const multiSelected = (e: CanvasElement) => (e.id ? multiSelectIds.has(e.id) : false);
+  const notMultiSelected = (e: CanvasElement) => !(e.id ? multiSelectIds.has(e.id) : false);
 
   const msPositions = () => {
     const firstSelectedIndex = elements.findIndex(multiSelected);
@@ -368,20 +366,25 @@ export const useElements = () => {
     saveHistory(result);
   };
 
-  const duplicateElement = (id: string, avgMoveUnit: number): Konva.ShapeConfig => {
+  const duplicateElement = (id: string, avgMoveUnit: number): CanvasElement => {
     const element = elements.find((item) => item.id === id);
-    if (!element) return {} as Konva.ShapeConfig;
+    if (!element) return {} as CanvasElement;
     
-    const created: Konva.ShapeConfig = {
-      ...element,
-      id: generateId(),
-      x: (element.x ?? 0) + avgMoveUnit,
-      y: (element.y ?? 0) + avgMoveUnit,
-    };
+    let created: CanvasElement;
     if (element.type === "clippedImage") {
-      const clippedElement = element as Konva.ShapeConfig & { shapeX: number; shapeY: number };
-      (created as Konva.ShapeConfig & { shapeX: number; shapeY: number }).shapeX = clippedElement.shapeX + avgMoveUnit;
-      (created as Konva.ShapeConfig & { shapeX: number; shapeY: number }).shapeY = clippedElement.shapeY + avgMoveUnit;
+      created = {
+        ...element,
+        id: generateId(),
+        shapeX: element.shapeX + avgMoveUnit,
+        shapeY: element.shapeY + avgMoveUnit,
+      };
+    } else {
+      created = {
+        ...element,
+        id: generateId(),
+        x: ((element as any).x ?? 0) + avgMoveUnit,
+        y: ((element as any).y ?? 0) + avgMoveUnit,
+      } as CanvasElement;
     }
     const result = elements.concat([created]);
     setElements(result);
@@ -394,13 +397,12 @@ export const useElements = () => {
     if (!element) return;
     
     if (element.type === "clippedImage") {
-      const clippedElement = element as Konva.ShapeConfig & { shapeX: number; shapeY: number };
       setCopiedEl({
         ...element,
         id: generateId(),
-        shapeX: clippedElement.shapeX + avgMoveUnit,
-        shapeY: clippedElement.shapeY + avgMoveUnit,
-      });
+        shapeX: (element as any).shapeX + avgMoveUnit,
+        shapeY: (element as any).shapeY + avgMoveUnit,
+      } as CanvasElement);
       return;
     }
     setCopiedEl({
@@ -411,7 +413,7 @@ export const useElements = () => {
     });
   };
 
-  const pasteElement = (): Konva.ShapeConfig | void => {
+  const pasteElement = (): CanvasElement | void => {
     if (copiedEl) {
       const result = elements.concat([copiedEl]);
       setElements(result);

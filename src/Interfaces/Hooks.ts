@@ -1,12 +1,13 @@
 import Konva from "konva";
 import { Dispatch, SetStateAction } from "react";
 import { UpdateElementOptions } from "./ComponentProps";
+import { CanvasElement } from "./Elements";
 
 export interface UpdateElementFn {
-  <T extends Konva.ShapeConfig>(
+  <T extends Partial<CanvasElement>>(
     config: T & { id: string },
     options?: UpdateElementOptions
-  ): Konva.ShapeConfig[];
+  ): CanvasElement[];
 }
 
 export interface UseDraggableParams {

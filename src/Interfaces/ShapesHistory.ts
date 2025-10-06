@@ -1,3 +1,3 @@
-import Konva from "konva";
+import { CanvasElement } from "./Elements";
 
-export type ShapesHistory = Konva.ShapeConfig[];
+export type ShapesHistory = CanvasElement[];

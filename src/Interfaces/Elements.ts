@@ -24,9 +24,43 @@ export enum Action {
   InnerTransform = 4,
 }
 
-export interface ImageElementState {
+interface BaseElement {
   id: string;
   type: string;
+  lock?: boolean;
+  rotation?: number;
+  group?: string[];
+  scaleX: number;
+  scaleY: number;
+}
+
+export interface TextElement extends BaseElement {
+  type: "text";
+  text: string;
+  x: number;
+  y: number;
+  fontFamily: string;
+  fontSize: number;
+  fontStyle?: string;
+  textDecoration?: string;
+  align?: string;
+  fill: string;
+  letterSpacing?: number;
+  lineHeight?: number;
+  opacity?: number;
+  strokeEnabled?: boolean;
+  stroke?: string;
+  strokeWidth?: number;
+  shadowEnabled?: boolean;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+}
+
+export interface ImageElement extends BaseElement {
+  type: "image";
   name?: string;
   src: string;
   image: HTMLImageElement;
@@ -39,10 +73,8 @@ export interface ImageElementState {
   innerWidth: number;
   innerHeight: number;
   flip?: boolean;
-  rotation: number;
   isCropped: boolean;
   isCropping: boolean;
-  lock?: boolean;
   scale: number;
   opacity?: number;
   shadowColor?: string;
@@ -65,9 +97,8 @@ export interface ImageElementState {
   strokeWidth?: number;
 }
 
-export interface ClippedImageElementState {
-  id: string;
-  type: string;
+export interface ClippedImageElement extends BaseElement {
+  type: "clippedImage";
   src: string;
   image: HTMLImageElement;
   imageDeltaX: number;
@@ -81,8 +112,6 @@ export interface ClippedImageElementState {
   isClipping: boolean;
   flipX?: boolean;
   flipY?: boolean;
-  rotation: number;
-  lock?: boolean;
   opacity?: number;
   svgPath: string;
   shapeElement: {
@@ -99,6 +128,132 @@ export interface ClippedImageElementState {
   shadowOpacity?: number;
   shadowEnabled?: boolean;
 }
+
+export interface PathElement extends BaseElement {
+  type: "path";
+  x: number;
+  y: number;
+  data: string;
+  height: number;
+  width: number;
+  fill: string;
+  stroke?: string;
+  strokeWidth?: number;
+  strokeType?: string;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+  shadowEnabled?: boolean;
+  useAnchors?: boolean;
+  opacity?: number;
+}
+
+export interface FlatSVGElement extends BaseElement {
+  type: "flat-svg";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  colors: string[];
+  fill: string;
+  scaled?: boolean;
+  opacity?: number;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+  shadowEnabled?: boolean;
+}
+
+export interface CircleElement extends BaseElement {
+  type: "circle" | "ellipse";
+  x: number;
+  y: number;
+  radiusX: number;
+  radiusY: number;
+  fill: string;
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+  shadowEnabled?: boolean;
+}
+
+export interface RectangleElement extends BaseElement {
+  type: "rectangle";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+  shadowEnabled?: boolean;
+}
+
+export interface StarElement extends BaseElement {
+  type: "star";
+  x: number;
+  y: number;
+  numPoints: number;
+  innerRadius: number;
+  outerRadius: number;
+  fill: string;
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+  shadowEnabled?: boolean;
+}
+
+export interface TriangleElement extends BaseElement {
+  type: "triangle";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+  shadowEnabled?: boolean;
+}
+
+export type CanvasElement =
+  | TextElement
+  | ImageElement
+  | ClippedImageElement
+  | PathElement
+  | FlatSVGElement
+  | CircleElement
+  | RectangleElement
+  | StarElement
+  | TriangleElement;
+
+export type ImageElementState = ImageElement;
+export type ClippedImageElementState = ClippedImageElement;
 
 export interface ElementPropsBase {
   isSelected: boolean;

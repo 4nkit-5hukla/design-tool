@@ -1,17 +1,38 @@
 import { useState } from "react";
+import Konva from "konva";
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
 import { ClipFuncHelper } from "Components/UI/Elements/ClippedImage";
+import { KonvaEventObject } from "konva/lib/Node";
+import { CanvasElement, ClippedImageElement } from "Interfaces/Elements";
 
-export const useMultiSelect = (stage) => {
-  const [rectProps, setRectProps] = useState(null);
+interface MultiSelectRectProps {
+  rotation: number;
+  x: number;
+  y: number;
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+  visible: boolean;
+  scaleX: number;
+  scaleY: number;
+  rectOnTransform: (e: KonvaEventObject<Event>) => void;
+  rectOnTransformEnd: (e: KonvaEventObject<Event>) => void;
+  rectOnDragMove: (e: KonvaEventObject<DragEvent>) => void;
+  rectOnDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  lock?: boolean;
+}
+
+export const useMultiSelect = (stage: Konva.Stage | undefined) => {
+  const [rectProps, setRectProps] = useState<MultiSelectRectProps | null>(null);
   const { multiSelectIds, setMultiSelectIds } = useAppState();
   const { elements, selected, setSelected, updateElement, updateElements } =
     useElementsContext();
 
   if (multiSelectIds.size === 0 && rectProps) setRectProps(null);
 
-  const updateRectProps = (rect, newElements) => {
+  const updateRectProps = (rect: Konva.Node, newElements: CanvasElement[]) => {
     const rotation = rect.rotation();
     const x = rect.x();
     const y = rect.y();
@@ -38,15 +59,16 @@ export const useMultiSelect = (stage) => {
     });
   };
 
-  const findShape = (id) => (stage ? stage.find(`#${id}`)[0] : undefined);
-  const findElement = (elements, id) => elements.find((e) => e.id === id);
+  const findShape = (id: string): Konva.Node | undefined => (stage ? stage.find(`#${id}`)[0] : undefined);
+  const findElement = (elements: CanvasElement[], id: string): CanvasElement | undefined => 
+    elements.find((e: CanvasElement) => e.id === id);
 
   const lock = [...multiSelectIds].some((id) => {
     const element = findElement(elements, id);
     return element && element.lock;
   });
 
-  const resizeElement = (element, x, y, scale) => {
+  const resizeElement = (element: CanvasElement, x: number, y: number, scale: number): CanvasElement => {
     switch (element.type) {
       case "text":
         return {
@@ -68,13 +90,15 @@ export const useMultiSelect = (stage) => {
         const image = findShape(element.id);
         const width = element.width * scale;
         const height = element.height * scale;
-        image.setAttrs({
-          scaleX: 1.0,
-          scaleY: 1.0,
-          width,
-          height,
-        });
-        image.cache();
+        if (image) {
+          image.setAttrs({
+            scaleX: 1.0,
+            scaleY: 1.0,
+            width,
+            height,
+          });
+          image.cache();
+        }
         return {
           ...element,
           x,
@@ -85,8 +109,8 @@ export const useMultiSelect = (stage) => {
           innerOffsetY: element.innerOffsetY * scale,
           innerWidth: element.innerWidth * scale,
           innerHeight: element.innerHeight * scale,
-          shadowOffsetX: element.shadowOffsetX * scale,
-          shadowOffsetY: element.shadowOffsetY * scale,
+          shadowOffsetX: (element.shadowOffsetX ?? 0) * scale,
+          shadowOffsetY: (element.shadowOffsetY ?? 0) * scale,
           scale: 1.0,
         };
       case "clippedImage":
@@ -100,15 +124,63 @@ export const useMultiSelect = (stage) => {
           shapeY: y,
           shapeWidth: element.shapeWidth * scale,
           shapeHeight: element.shapeHeight * scale,
-          shadowOffsetX: element.shadowOffsetX * scale,
-          shadowOffsetY: element.shadowOffsetY * scale,
+          shadowOffsetX: (element.shadowOffsetX ?? 0) * scale,
+          shadowOffsetY: (element.shadowOffsetY ?? 0) * scale,
+        };
+      case "circle":
+      case "ellipse":
+        return {
+          ...element,
+          x,
+          y,
+          radiusX: element.radiusX * scale,
+          radiusY: element.radiusY * scale,
+          scaleX: element.scaleX * scale,
+          scaleY: element.scaleY * scale,
+        };
+      case "rectangle":
+        return {
+          ...element,
+          x,
+          y,
+          width: element.width * scale,
+          height: element.height * scale,
+          scaleX: element.scaleX * scale,
+          scaleY: element.scaleY * scale,
+        };
+      case "star":
+        return {
+          ...element,
+          x,
+          y,
+          innerRadius: element.innerRadius * scale,
+          outerRadius: element.outerRadius * scale,
+          scaleX: element.scaleX * scale,
+          scaleY: element.scaleY * scale,
+        };
+      case "triangle":
+        return {
+          ...element,
+          x,
+          y,
+          width: element.width * scale,
+          height: element.height * scale,
+          scaleX: element.scaleX * scale,
+          scaleY: element.scaleY * scale,
         };
       default:
         return element;
     }
   };
 
-  const transformClippedImage = (element, shape, x, y, scale, rotation) => {
+  const transformClippedImage = (
+    element: ClippedImageElement, 
+    shape: Konva.Node, 
+    x: number, 
+    y: number, 
+    scale: number, 
+    rotation: number
+  ) => {
     const clipFuncHelper = new ClipFuncHelper(element);
     const {
       id,
@@ -132,23 +204,29 @@ export const useMultiSelect = (stage) => {
       offsetY: (flipY ? offsetY + imageDeltaY : offsetY - imageDeltaY) * scale,
       rotation,
     });
-    findShape("shadow" + id).setAttrs({ visible: false });
-    findShape("group" + id).setAttrs({
-      clipFunc: clipFuncHelper.group(
-        {
-          ...element,
-          shapeX: x,
-          shapeY: y,
-          shapeWidth: shapeWidth * scale,
-          shapeHeight: shapeHeight * scale,
-          rotation,
-        },
-        false
-      ),
-    });
+    const shadowShape = findShape("shadow" + id);
+    if (shadowShape) {
+      shadowShape.setAttrs({ visible: false });
+    }
+    const groupShape = findShape("group" + id);
+    if (groupShape) {
+      groupShape.setAttrs({
+        clipFunc: clipFuncHelper.group(
+          {
+            ...element,
+            shapeX: x,
+            shapeY: y,
+            shapeWidth: shapeWidth * scale,
+            shapeHeight: shapeHeight * scale,
+            rotation,
+          },
+          false
+        ),
+      });
+    }
   };
 
-  const rectOnResize = (rect, elements, xBase, yBase) => {
+  const rectOnResize = (rect: Konva.Node, elements: CanvasElement[], xBase: number, yBase: number) => {
     if (lock) return;
     const scale = rect.scaleX();
     const rx = rect.x();
@@ -157,6 +235,8 @@ export const useMultiSelect = (stage) => {
     multiSelectIds.forEach((id) => {
       const shape = findShape(id);
       const element = findElement(elements, id);
+      if (!shape || !element) return;
+      
       if (element.type === "clippedImage") {
         const dx = element.shapeX - xBase;
         const dy = element.shapeY - yBase;
@@ -172,47 +252,54 @@ export const useMultiSelect = (stage) => {
         );
         return;
       }
-      const { x, y } = element;
-      const dx = x - xBase;
-      const dy = y - yBase;
-      shape.setAttrs({
-        x: rx + dx * scale,
-        y: ry + dy * scale,
-        scaleX: element.scaleX * scale,
-        scaleY: element.scaleY * scale,
-      });
+      if (element.type === "text" || element.type === "image" || element.type === "path" || element.type === "flat-svg" || element.type === "circle" || element.type === "ellipse" || element.type === "rectangle" || element.type === "star" || element.type === "triangle") {
+        const { x, y } = element;
+        const dx = x - xBase;
+        const dy = y - yBase;
+        shape.setAttrs({
+          x: rx + dx * scale,
+          y: ry + dy * scale,
+          scaleX: element.scaleX * scale,
+          scaleY: element.scaleY * scale,
+        });
+      }
     });
   };
-  const rectOnResizeEnd = (rect, elements, xBase, yBase) => {
+
+  const rectOnResizeEnd = (rect: Konva.Node, elements: CanvasElement[], xBase: number, yBase: number) => {
     if (lock) return;
     const scale = rect.scaleX();
     const rx = rect.x();
     const ry = rect.y();
-    const updateElement = (element) => {
-      const x = element.type === "clippedImage" ? element.shapeX : element.x;
-      const y = element.type === "clippedImage" ? element.shapeY : element.y;
+    const updateElementFunc = (element: CanvasElement): CanvasElement => {
+      const x = element.type === "clippedImage" ? element.shapeX : 'x' in element ? element.x : 0;
+      const y = element.type === "clippedImage" ? element.shapeY : 'y' in element ? element.y : 0;
       const dx = x - xBase;
       const dy = y - yBase;
       return resizeElement(element, rx + dx * scale, ry + dy * scale, scale);
     };
 
-    const newElements = elements.map((e) =>
-      msIncludes(e.id) ? updateElement(e) : e
+    const newElements = elements.map((e: CanvasElement) =>
+      msIncludes(e.id) ? updateElementFunc(e) : e
     );
     multiSelectIds.forEach((id) => {
       const element = findElement(newElements, id);
+      if (!element) return;
+      
       if (element.type === "text") {
         const shape = findShape(id);
-        shape.setAttrs({
-          scaleX: element.scaleX,
-          scaleY: element.scaleY,
-          width: shape.width() * scale,
-          heigth: shape.height() * scale,
-        });
+        if (shape) {
+          shape.setAttrs({
+            scaleX: element.scaleX,
+            scaleY: element.scaleY,
+            width: shape.width() * scale,
+            heigth: shape.height() * scale,
+          });
+        }
         return;
       }
       const shape = findShape(id);
-      if (element.type === "clippedImage") {
+      if (element.type === "clippedImage" && shape) {
         const clipFuncHelper = new ClipFuncHelper(element);
         const {
           id,
@@ -235,154 +322,185 @@ export const useMultiSelect = (stage) => {
           offsetX: flipX ? offsetX + imageDeltaX : offsetX - imageDeltaX,
           offsetY: flipY ? offsetY + imageDeltaY : offsetY - imageDeltaY,
         });
-        findShape("shadow" + id).setAttrs({ visible: true });
-        findShape("group" + id).setAttrs({
-          clipFunc: clipFuncHelper.group(element, false),
-        });
+        const shadowShape = findShape("shadow" + id);
+        if (shadowShape) {
+          shadowShape.setAttrs({ visible: true });
+        }
+        const groupShape = findShape("group" + id);
+        if (groupShape) {
+          groupShape.setAttrs({
+            clipFunc: clipFuncHelper.group(element, false),
+          });
+        }
         return;
       }
     });
     updateRectProps(rect, newElements);
-    updateElements(newElements);
+    updateElements(newElements as CanvasElement[]);
   };
 
-  const rectOnTransform = (elements, rotationBase, xBase, yBase) => (e) => {
-    if (lock) return;
-    const rect = findShape("multiSelectRect");
-    const rx = rect.x();
-    const ry = rect.y();
-    const rotation = rect.rotation();
-    const dr = rotation - rotationBase;
-    if (Math.abs(dr) < 1e-5) {
-      rectOnResize(rect, elements, xBase, yBase);
-      return;
-    }
-    const rad = (dr / 180) * Math.PI;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-    multiSelectIds.forEach((id) => {
-      const shape = findShape(id);
-      const element = findElement(elements, id);
-      const rotation = (element.rotation ?? 0) + dr;
-      const dx =
-        (element.type === "clippedImage" ? element.shapeX : element.x) - rx;
-      const dy =
-        (element.type === "clippedImage" ? element.shapeY : element.y) - ry;
-      const x = rx + dx * cos - dy * sin;
-      const y = ry + dx * sin + dy * cos;
-      if (element.type === "clippedImage") {
-        transformClippedImage(element, shape, x, y, rect.scaleX(), rotation);
-      } else {
-        shape.setAttrs({ rotation, x, y });
+  const rectOnTransform = (elements: CanvasElement[], rotationBase: number, xBase: number, yBase: number) => 
+    (_e: KonvaEventObject<Event>) => {
+      if (lock) return;
+      const rect = findShape("multiSelectRect");
+      if (!rect) return;
+      
+      const rx = rect.x();
+      const ry = rect.y();
+      const rotation = rect.rotation();
+      const dr = rotation - rotationBase;
+      if (Math.abs(dr) < 1e-5) {
+        rectOnResize(rect, elements, xBase, yBase);
+        return;
       }
-    });
-  };
-  const rectOnTransformEnd = (elements, rotationBase, xBase, yBase) => (e) => {
-    if (lock) return;
-    const rect = findShape("multiSelectRect");
-    const rx = rect.x();
-    const ry = rect.y();
-    const rotation = rect.rotation();
-    const dr = rotation - rotationBase;
-    if (Math.abs(dr) < 1e-5) {
-      rectOnResizeEnd(rect, elements, xBase, yBase);
-      return;
-    }
-    const rad = (dr / 180) * Math.PI;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-    const updateElement = (element) => {
-      const clippedImage = element.type === "clippedImage";
-      const x = clippedImage ? element.shapeX : element.x;
-      const y = clippedImage ? element.shapeY : element.y;
-      const rotation = element.rotation ?? 0;
-      const dx = x - rx;
-      const dy = y - ry;
-      if (clippedImage) {
-        findShape("shadow" + element.id).setAttrs({ visible: true });
-        return {
-          ...element,
-          rotation: rotation + dr,
-          shapeX: rx + dx * cos - dy * sin,
-          shapeY: ry + dx * sin + dy * cos,
-        };
-      } else {
-        return {
-          ...element,
-          rotation: rotation + dr,
-          x: rx + dx * cos - dy * sin,
-          y: ry + dx * sin + dy * cos,
-        };
-      }
-    };
-    const newElements = elements.map((e) =>
-      msIncludes(e.id) ? updateElement(e) : e
-    );
-    updateRectProps(rect, newElements);
-    updateElements(newElements);
-  };
-  const rectOnDragMove = (elements, xBase, yBase) => (e) => {
-    if (lock) return;
-    const target = e.target;
-    const dx = target.x() - xBase;
-    const dy = target.y() - yBase;
-    elements
-      .filter((e) => multiSelectIds.has(e.id))
-      .forEach((e) => {
-        const shape = findShape(e.id);
-        if (e.type === "clippedImage") {
-          const clipFuncHelper = new ClipFuncHelper(e);
-          const x = e.shapeX + dx;
-          const y = e.shapeY + dy;
-          findShape(e.id).setAttrs({ x, y });
-          findShape("shadow" + e.id).setAttrs({ x, y });
-          findShape("group" + e.id).setAttrs({
-            clipFunc: clipFuncHelper.group(
-              { ...e, shapeX: x, shapeY: y },
-              false
-            ),
-          });
+      const rad = (dr / 180) * Math.PI;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      multiSelectIds.forEach((id) => {
+        const shape = findShape(id);
+        const element = findElement(elements, id);
+        if (!shape || !element) return;
+        
+        const rotation = (element.rotation ?? 0) + dr;
+        const dx = (element.type === "clippedImage" ? element.shapeX : 'x' in element ? element.x : 0) - rx;
+        const dy = (element.type === "clippedImage" ? element.shapeY : 'y' in element ? element.y : 0) - ry;
+        const x = rx + dx * cos - dy * sin;
+        const y = ry + dx * sin + dy * cos;
+        if (element.type === "clippedImage") {
+          transformClippedImage(element, shape, x, y, rect.scaleX(), rotation);
         } else {
-          shape.setAttrs({ x: e.x + dx, y: e.y + dy });
+          shape.setAttrs({ rotation, x, y });
         }
       });
-  };
-  const rectOnDragEnd = (elements, xBase, yBase) => (e) => {
-    if (lock) return;
-    const dx = e.target.x() - xBase;
-    const dy = e.target.y() - yBase;
-    const move = (element) => {
-      if (!multiSelectIds.has(element.id)) return element;
-      if (element.type === "clippedImage") {
-        return {
-          ...element,
-          shapeX: element.shapeX + dx,
-          shapeY: element.shapeY + dy,
-        };
-      } else {
-        return {
-          ...element,
-          x: element.x + dx,
-          y: element.y + dy,
-        };
-      }
     };
-    const newElements = elements.map(move);
-    updateElements(newElements);
-    updateRectProps(e.target, newElements);
-  };
+
+  const rectOnTransformEnd = (elements: CanvasElement[], rotationBase: number, xBase: number, yBase: number) => 
+    (_e: KonvaEventObject<Event>) => {
+      if (lock) return;
+      const rect = findShape("multiSelectRect");
+      if (!rect) return;
+      
+      const rx = rect.x();
+      const ry = rect.y();
+      const rotation = rect.rotation();
+      const dr = rotation - rotationBase;
+      if (Math.abs(dr) < 1e-5) {
+        rectOnResizeEnd(rect, elements, xBase, yBase);
+        return;
+      }
+      const rad = (dr / 180) * Math.PI;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const updateElementFunc = (element: CanvasElement): CanvasElement => {
+        const clippedImage = element.type === "clippedImage";
+        const x = clippedImage ? element.shapeX : 'x' in element ? element.x : 0;
+        const y = clippedImage ? element.shapeY : 'y' in element ? element.y : 0;
+        const rotation = element.rotation ?? 0;
+        const dx = x - rx;
+        const dy = y - ry;
+        if (clippedImage) {
+          const shadowShape = findShape("shadow" + element.id);
+          if (shadowShape) {
+            shadowShape.setAttrs({ visible: true });
+          }
+          return {
+            ...element,
+            rotation: rotation + dr,
+            shapeX: rx + dx * cos - dy * sin,
+            shapeY: ry + dx * sin + dy * cos,
+          };
+        } else if ('x' in element && 'y' in element) {
+          return {
+            ...element,
+            rotation: rotation + dr,
+            x: rx + dx * cos - dy * sin,
+            y: ry + dx * sin + dy * cos,
+          };
+        }
+        return element;
+      };
+      const newElements = elements.map((e: CanvasElement) =>
+        msIncludes(e.id) ? updateElementFunc(e) : e
+      );
+      updateRectProps(rect, newElements);
+      updateElements(newElements as CanvasElement[]);
+    };
+
+  const rectOnDragMove = (elements: CanvasElement[], xBase: number, yBase: number) => 
+    (e: KonvaEventObject<DragEvent>) => {
+      if (lock) return;
+      const target = e.target;
+      const dx = target.x() - xBase;
+      const dy = target.y() - yBase;
+      elements
+        .filter((e: CanvasElement) => multiSelectIds.has(e.id))
+        .forEach((e: CanvasElement) => {
+          const shape = findShape(e.id);
+          if (!shape) return;
+          
+          if (e.type === "clippedImage") {
+            const clipFuncHelper = new ClipFuncHelper(e);
+            const x = e.shapeX + dx;
+            const y = e.shapeY + dy;
+            const shapeNode = findShape(e.id);
+            if (shapeNode) shapeNode.setAttrs({ x, y });
+            const shadowNode = findShape("shadow" + e.id);
+            if (shadowNode) shadowNode.setAttrs({ x, y });
+            const groupNode = findShape("group" + e.id);
+            if (groupNode) {
+              groupNode.setAttrs({
+                clipFunc: clipFuncHelper.group(
+                  { ...e, shapeX: x, shapeY: y },
+                  false
+                ),
+              });
+            }
+          } else if ('x' in e && 'y' in e) {
+            shape.setAttrs({ x: e.x + dx, y: e.y + dy });
+          }
+        });
+    };
+
+  const rectOnDragEnd = (elements: CanvasElement[], xBase: number, yBase: number) => 
+    (e: KonvaEventObject<DragEvent>) => {
+      if (lock) return;
+      const dx = e.target.x() - xBase;
+      const dy = e.target.y() - yBase;
+      const move = (element: CanvasElement): CanvasElement => {
+        if (!multiSelectIds.has(element.id)) return element;
+        if (element.type === "clippedImage") {
+          return {
+            ...element,
+            shapeX: element.shapeX + dx,
+            shapeY: element.shapeY + dy,
+          };
+        } else if ('x' in element && 'y' in element) {
+          return {
+            ...element,
+            x: element.x + dx,
+            y: element.y + dy,
+          };
+        }
+        return element;
+      };
+      const newElements = elements.map(move);
+      updateElements(newElements as CanvasElement[]);
+      updateRectProps(e.target as Konva.Node, newElements);
+    };
 
   const msProps = (() => {
     if (rectProps) {
       const rect = findShape("multiSelectRect");
-      const dx = rect.x() - rectProps.x;
-      const dy = rect.y() - rectProps.y;
-      if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
-        return {
-          ...rectProps,
-          x: rect.x(),
-          y: rect.y(),
-        };
+      if (rect) {
+        const dx = rect.x() - rectProps.x;
+        const dy = rect.y() - rectProps.y;
+        if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
+          return {
+            ...rectProps,
+            x: rect.x(),
+            y: rect.y(),
+          };
+        }
       }
       return rectProps;
     }
@@ -402,8 +520,9 @@ export const useMultiSelect = (stage) => {
     };
   })();
 
-  const msIncludes = (id) => multiSelectIds.has(id);
-  const msAdd = (id) => {
+  const msIncludes = (id: string): boolean => multiSelectIds.has(id);
+
+  const msAdd = (id: string) => {
     if (id === selected) return;
     const copy = new Set(multiSelectIds);
     if (selected) copy.add(selected);
@@ -413,24 +532,27 @@ export const useMultiSelect = (stage) => {
       copy.add(id);
       setMultiSelectIds(copy);
       setRectProps(null);
-      if (selected) setSelected(null);
+      if (selected) setSelected("");
     }
   };
-  const msAddAll = (ids) => {
+
+  const msAddAll = (ids: string[]) => {
     const copy = new Set(multiSelectIds);
     if (selected) copy.add(selected);
-    ids.forEach((id) => {
+    ids.forEach((id: string) => {
       copy.add(id);
     });
     setMultiSelectIds(copy);
     setRectProps(null);
-    if (selected) setSelected(null);
+    if (selected) setSelected("");
   };
+
   const msClear = () => {
     setMultiSelectIds(new Set());
     setRectProps(null);
   };
-  const msDelete = (id) => {
+
+  const msDelete = (id: string) => {
     const copyIds = new Set(multiSelectIds);
     copyIds.delete(id);
     if (copyIds.size === 1) {
@@ -440,12 +562,13 @@ export const useMultiSelect = (stage) => {
     } else {
       setMultiSelectIds(copyIds);
       setRectProps(null);
-      if (selected) setSelected(null);
+      if (selected) setSelected("");
     }
   };
-  const msDeleteAll = (ids) => {
+
+  const msDeleteAll = (ids: string[]) => {
     const copyIds = new Set(multiSelectIds);
-    ids.forEach((id) => {
+    ids.forEach((id: string) => {
       copyIds.delete(id);
     });
     if (copyIds.size === 1) {
@@ -455,10 +578,11 @@ export const useMultiSelect = (stage) => {
     } else {
       setMultiSelectIds(copyIds);
       setRectProps(null);
-      if (selected) setSelected(null);
+      if (selected) setSelected("");
     }
   };
-  const msClick = (element) => (e) => {
+
+  const msClick = (element: CanvasElement) => (e: KonvaEventObject<MouseEvent>) => {
     const id = element.id;
     if (element.group && element.group.length > 0) {
       if (e.evt.shiftKey) {
@@ -469,7 +593,7 @@ export const useMultiSelect = (stage) => {
         }
       } else {
         setMultiSelectIds(new Set(element.group));
-        setSelected(null);
+        setSelected("");
       }
     } else if (e.evt.shiftKey) {
       if (msIncludes(id)) {
@@ -484,84 +608,101 @@ export const useMultiSelect = (stage) => {
       setSelected(element.id);
     }
   };
-  const msDragMove = (element) => (e) => {
+
+  const msDragMove = (element: CanvasElement) => (e: KonvaEventObject<DragEvent>) => {
     if (lock) return;
     const target = e.target;
-    const dx = target.x() - (element.type === "clippedImage" ? 0 : element.x);
-    const dy = target.y() - (element.type === "clippedImage" ? 0 : element.y);
-    const move = (e) => {
+    const dx = target.x() - (element.type === "clippedImage" ? 0 : 'x' in element ? element.x : 0);
+    const dy = target.y() - (element.type === "clippedImage" ? 0 : 'y' in element ? element.y : 0);
+    const move = (e: CanvasElement) => {
       if (e.type === "clippedImage") {
         const clipFuncHelper = new ClipFuncHelper(e);
         const x = e.shapeX + dx;
         const y = e.shapeY + dy;
-        findShape(e.id).setAttrs({ x, y });
-        findShape("shadow" + e.id).setAttrs({ x, y });
-        findShape("group" + e.id).setAttrs({
-          clipFunc: clipFuncHelper.group({ ...e, shapeX: x, shapeY: y }, false),
-        });
-      } else {
-        findShape(e.id).setAttrs({
-          x: e.x + dx,
-          y: e.y + dy,
-        });
+        const shapeNode = findShape(e.id);
+        if (shapeNode) shapeNode.setAttrs({ x, y });
+        const shadowNode = findShape("shadow" + e.id);
+        if (shadowNode) shadowNode.setAttrs({ x, y });
+        const groupNode = findShape("group" + e.id);
+        if (groupNode) {
+          groupNode.setAttrs({
+            clipFunc: clipFuncHelper.group({ ...e, shapeX: x, shapeY: y }, false),
+          });
+        }
+      } else if ('x' in e && 'y' in e) {
+        const shapeNode = findShape(e.id);
+        if (shapeNode) {
+          shapeNode.setAttrs({
+            x: e.x + dx,
+            y: e.y + dy,
+          });
+        }
       }
     };
     if (!multiSelectIds.has(element.id)) {
       if (element.group) {
-        element.group.map((id) => findElement(elements, id)).forEach(move);
+        element.group
+          .map((id: string) => findElement(elements, id))
+          .filter((e): e is CanvasElement => e !== undefined)
+          .forEach(move);
       }
       return;
     }
     elements
-      .filter((e) => multiSelectIds.has(e.id) && e.id !== element.id)
+      .filter((e: CanvasElement) => multiSelectIds.has(e.id) && e.id !== element.id)
       .forEach(move);
-    findShape("multiSelectRect").setAttrs({
-      x: msProps.x + dx,
-      y: msProps.y + dy,
-    });
+    const msRect = findShape("multiSelectRect");
+    if (msRect) {
+      msRect.setAttrs({
+        x: msProps.x + dx,
+        y: msProps.y + dy,
+      });
+    }
   };
 
-  const msDragEnd = (element) => (e) => {
+  const msDragEnd = (element: CanvasElement) => (e: KonvaEventObject<DragEvent>) => {
     if (lock) return;
     if (!msIncludes(element.id)) {
       if (element.group && element.group.length > 0) {
-        const dx =
-          e.target.x() - (element.type === "clippedImage" ? 0 : element.x);
-        const dy =
-          e.target.y() - (element.type === "clippedImage" ? 0 : element.y);
+        const dx = e.target.x() - (element.type === "clippedImage" ? 0 : 'x' in element ? element.x : 0);
+        const dy = e.target.y() - (element.type === "clippedImage" ? 0 : 'y' in element ? element.y : 0);
         updateElements(
-          element.group.map((id) => {
-            const e = findElement(elements, id);
-            if (e.type === "clippedImage") {
-              return {
-                ...e,
-                shapeX: e.shapeX + dx,
-                shapeY: e.shapeY + dy,
-              };
-            } else {
-              return {
-                ...e,
-                x: e.x + dx,
-                y: e.y + dy,
-              };
-            }
-          })
+          element.group
+            .map((id: string) => {
+              const e = findElement(elements, id);
+              if (!e) return null;
+              if (e.type === "clippedImage") {
+                return {
+                  ...e,
+                  shapeX: e.shapeX + dx,
+                  shapeY: e.shapeY + dy,
+                };
+              } else if ('x' in e && 'y' in e) {
+                return {
+                  ...e,
+                  x: e.x + dx,
+                  y: e.y + dy,
+                };
+              }
+              return e;
+            })
+            .filter((e): e is CanvasElement => e !== null) as CanvasElement[]
         );
         setMultiSelectIds(new Set(element.group));
-        setSelected(null);
+        setSelected("");
       } else {
         if (element.type === "clippedImage") {
           updateElement({
             id: element.id,
             shapeX: element.shapeX + e.target.x(),
             shapeY: element.shapeY + e.target.y(),
-          });
-        } else {
+          } as CanvasElement);
+        } else if ('x' in element && 'y' in element) {
           updateElement({
             id: element.id,
             x: e.target.x(),
             y: e.target.y(),
-          });
+          } as CanvasElement);
         }
         setSelected(element.id);
         msClear();
@@ -570,9 +711,9 @@ export const useMultiSelect = (stage) => {
     }
 
     const target = e.target;
-    const dx = target.x() - (element.type === "clippedImage" ? 0 : element.x);
-    const dy = target.y() - (element.type === "clippedImage" ? 0 : element.y);
-    const move = (element) => {
+    const dx = target.x() - (element.type === "clippedImage" ? 0 : 'x' in element ? element.x : 0);
+    const dy = target.y() - (element.type === "clippedImage" ? 0 : 'y' in element ? element.y : 0);
+    const move = (element: CanvasElement): CanvasElement => {
       if (!multiSelectIds.has(element.id)) return element;
       if (element.type === "clippedImage") {
         return {
@@ -580,41 +721,53 @@ export const useMultiSelect = (stage) => {
           shapeX: element.shapeX + dx,
           shapeY: element.shapeY + dy,
         };
-      } else {
+      } else if ('x' in element && 'y' in element) {
         return {
           ...element,
           x: element.x + dx,
           y: element.y + dy,
         };
       }
+      return element;
     };
     const newElements = elements.map(move);
-    updateElements(newElements);
-    updateRectProps(findShape("multiSelectRect"), newElements);
+    updateElements(newElements as CanvasElement[]);
+    const msRect = findShape("multiSelectRect");
+    if (msRect) {
+      updateRectProps(msRect, newElements);
+    }
   };
 
-  const msSelectionRectStart = (stage) => {
-    const { x, y } = stage.getPointerPosition();
-    findShape("selectionRect").setAttrs({
-      x,
-      y,
-      width: 0,
-      height: 0,
-      visible: true,
-    });
+  const msSelectionRectStart = (stage: Konva.Stage) => {
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+    const { x, y } = pos;
+    const selectionRect = findShape("selectionRect");
+    if (selectionRect) {
+      selectionRect.setAttrs({
+        x,
+        y,
+        width: 0,
+        height: 0,
+        visible: true,
+      });
+    }
   };
 
-  const msSelectionRectMove = (stage) => {
-    const { x, y } = stage.getPointerPosition();
+  const msSelectionRectMove = (stage: Konva.Stage) => {
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+    const { x, y } = pos;
     const selection = findShape("selectionRect");
+    if (!selection) return;
     const rx = selection.x();
     const ry = selection.y();
-    findShape("selectionRect").setAttrs({ width: x - rx, height: y - ry });
+    selection.setAttrs({ width: x - rx, height: y - ry });
   };
 
   const msSelectionRectEnd = () => {
     const rect = findShape("selectionRect");
-    if (!rect.visible()) return;
+    if (!rect || !rect.visible()) return;
     const x = rect.x();
     const y = rect.y();
     const width = rect.width();
@@ -623,22 +776,27 @@ export const useMultiSelect = (stage) => {
     const right = Math.max(x, x + width);
     const top = Math.min(y, y + height);
     const bottom = Math.max(y, y + height);
-    const isSelectedElement = (e) =>
-      !e.lock && e.x > left && e.x < right && e.y > top && e.y < bottom;
-    findShape("selectionRect").setAttrs({
+    const isSelectedElement = (e: CanvasElement): boolean => {
+      if (e.lock) return false;
+      if ('x' in e && 'y' in e) {
+        return e.x > left && e.x < right && e.y > top && e.y < bottom;
+      }
+      return false;
+    };
+    rect.setAttrs({
       visible: false,
       width: 0,
       height: 0,
     });
     const selectedElements = elements.filter(isSelectedElement);
-    const groupsIds = [];
-    selectedElements.forEach((e) => {
+    const groupsIds: string[] = [];
+    selectedElements.forEach((e: CanvasElement) => {
       if (e.group) {
         groupsIds.push(...e.group);
       }
     });
     const ids = [
-      ...new Set([...selectedElements.map((e) => e.id), ...groupsIds]),
+      ...new Set([...selectedElements.map((e: CanvasElement) => e.id), ...groupsIds]),
     ];
     if (ids)
       if (ids.length === 1) {
@@ -646,41 +804,50 @@ export const useMultiSelect = (stage) => {
       } else {
         setMultiSelectIds(new Set(ids));
         setRectProps(null);
-        if (selected) setSelected(null);
+        if (selected) setSelected("");
       }
   };
 
-  const msDraggable = (id) => !msIncludes(id) || !lock;
+  const msDraggable = (id: string): boolean => !msIncludes(id) || !lock;
 
-  const msMouseDown = (element) => () => {
+  const msMouseDown = (element: CanvasElement | null) => () => {
     if (!element || element.lock) {
-      msSelectionRectStart(stage);
+      if (stage) {
+        msSelectionRectStart(stage);
+      }
       setMultiSelectIds(new Set());
     }
   };
 
-  const isGrouped = () => {
-    const getElementGroup = (id) => {
+  const isGrouped = (): boolean => {
+    const getElementGroup = (id: string): string[] => {
       const element = findElement(elements, id);
       return (element && element.group) || [];
     };
-    const equal = (xs, ys) =>
+    const equal = (xs: string[], ys: string[]): boolean =>
       xs.length === ys.length && xs.every((x, i) => x === ys[i]);
-    const allEqual = (list) => list.reduce((a, b) => (equal(a, b) ? a : NaN));
+    const allEqual = (list: string[][]): string[] | number => {
+      if (list.length === 0) return NaN;
+      const first = list[0];
+      return list.reduce((a: string[] | number, b: string[]) => 
+        (typeof a !== 'number' && equal(a, b) ? a : NaN), first
+      );
+    };
     const groups = [...multiSelectIds].map(getElementGroup);
-    return groups.length > 0 && allEqual(groups) && groups[0].length > 0;
+    const result = allEqual(groups);
+    return groups.length > 0 && typeof result !== 'number' && result.length > 0;
   };
 
   const msGroupClick = () => {
     const group = isGrouped() ? [] : [...multiSelectIds];
-    const updateGroup = (e) => {
+    const updateGroup = (e: CanvasElement): CanvasElement => {
       if (!multiSelectIds.has(e.id)) return e;
       return {
         ...e,
         group,
       };
     };
-    updateElements(elements.map(updateGroup));
+    updateElements(elements.map(updateGroup) as CanvasElement[]);
   };
 
   return {
@@ -698,13 +865,22 @@ export const useMultiSelect = (stage) => {
   };
 };
 
-function getMultiSelectProps(elements, multiSelectIds, findShape) {
+interface VertexPoint {
+  x: number;
+  y: number;
+}
+
+function getMultiSelectProps(
+  elements: CanvasElement[], 
+  multiSelectIds: Set<string>, 
+  findShape: (id: string) => Konva.Node | undefined
+) {
   const allVertices = elements
-    .filter((e) => multiSelectIds.has(e.id))
-    .map((e) => vertices(e, findShape))
+    .filter((e: CanvasElement) => multiSelectIds.has(e.id))
+    .map((e: CanvasElement) => vertices(e, findShape))
     .flat();
-  const xs = allVertices.map((v) => v.x);
-  const ys = allVertices.map((v) => v.y);
+  const xs = allVertices.map((v: VertexPoint) => v.x);
+  const ys = allVertices.map((v: VertexPoint) => v.y);
   const xMin = Math.min(...xs);
   const xMax = Math.max(...xs);
   const yMin = Math.min(...ys);
@@ -725,13 +901,14 @@ function getMultiSelectProps(elements, multiSelectIds, findShape) {
   };
 }
 
-function vertices(element, findShape) {
+function vertices(element: CanvasElement, findShape: (id: string) => Konva.Node | undefined): VertexPoint[] {
   const { id, scaleX, scaleY, type } = element;
   const rotation = element.rotation ?? 0;
   const cos = Math.cos((rotation / 180) * Math.PI);
   const sin = Math.sin((rotation / 180) * Math.PI);
 
-  let x, y, width, height;
+  let x: number = 0, y: number = 0, width: number = 0, height: number = 0;
+  
   if (type === "image" && element.isCropped) {
     width = element.innerWidth;
     height = element.innerHeight;
@@ -754,13 +931,29 @@ function vertices(element, findShape) {
     height = element.shapeHeight;
     x = element.shapeX;
     y = element.shapeY;
-  } else {
+  } else if (type === "path" || type === "rectangle") {
+    width = element.width * scaleX;
+    height = element.height * scaleY;
+    x = element.x;
+    y = element.y;
+  } else if (type === "circle" || type === "ellipse") {
+    width = element.radiusX * 2 * scaleX;
+    height = element.radiusY * 2 * scaleY;
+    x = element.x;
+    y = element.y;
+  } else if (type === "star") {
+    width = element.outerRadius * 2 * scaleX;
+    height = element.outerRadius * 2 * scaleY;
+    x = element.x;
+    y = element.y;
+  } else if (type === "triangle") {
     width = element.width * scaleX;
     height = element.height * scaleY;
     x = element.x;
     y = element.y;
   }
-  const absXY = (dx, dy) => ({
+  
+  const absXY = (dx: number, dy: number): VertexPoint => ({
     x: x + dx * cos - dy * sin,
     y: y + dx * sin + dy * cos,
   });
@@ -774,15 +967,17 @@ function vertices(element, findShape) {
   ];
 }
 
+type AlignType = "top" | "middle" | "bottom" | "left" | "center" | "right";
+
 export function alignMultiSelect(
-  stage,
-  align,
-  elements,
-  updateElements,
-  multiSelectIds
+  stage: Konva.Stage | undefined,
+  align: AlignType,
+  elements: CanvasElement[],
+  updateElements: (elements: CanvasElement[]) => void,
+  multiSelectIds: Set<string>
 ) {
   const rect = stage ? stage.find(`#multiSelectRect`)[0] : undefined;
-  if (!rect) return { stage, dx: 0, dy: 0 };
+  if (!rect || !stage) return { stage, dx: 0, dy: 0 };
   const x = rect.x();
   const y = rect.y();
   const scaleX = rect.scaleX();
@@ -792,20 +987,20 @@ export function alignMultiSelect(
   const rotation = rect.rotation();
   const cos = Math.cos((rotation / 180) * Math.PI);
   const sin = Math.sin((rotation / 180) * Math.PI);
-  const absXY = (dx, dy) => ({
+  const absXY = (dx: number, dy: number): VertexPoint => ({
     x: x + dx * cos - dy * sin,
     y: y + dx * sin + dy * cos,
   });
   const widthHalf = width / 2;
   const heightHalf = height / 2;
-  const vertices = [
+  const verts = [
     absXY(-widthHalf, -heightHalf),
     absXY(widthHalf, -heightHalf),
     absXY(widthHalf, heightHalf),
     absXY(-widthHalf, heightHalf),
   ];
-  const xs = vertices.map((v) => v.x);
-  const ys = vertices.map((v) => v.y);
+  const xs = verts.map((v: VertexPoint) => v.x);
+  const ys = verts.map((v: VertexPoint) => v.y);
   let nx = x;
   let ny = y;
   if (align === "top") ny = y - Math.min(...ys);
@@ -821,48 +1016,49 @@ export function alignMultiSelect(
     y: rect.y() + dy,
   });
   updateElements(
-    elements.map((e) => {
-      if (!multiSelectIds.has(e.id)) return e;
+    elements.map((e: CanvasElement) => {
+      if (!multiSelectIds.has(e.id)) return e as CanvasElement;
       if (e.type === "clippedImage") {
         return {
           ...e,
           shapeX: e.shapeX + dx,
           shapeY: e.shapeY + dy,
-        };
-      } else {
+        } as CanvasElement;
+      } else if ('x' in e && 'y' in e) {
         return {
           ...e,
-          x: (e.x ?? 0) + dx,
-          y: (e.y ?? 0) + dy,
-        };
+          x: e.x + dx,
+          y: e.y + dy,
+        } as CanvasElement;
       }
+      return e as CanvasElement;
     })
   );
 }
 
 export function alignMultiSelect2(
-  stage,
-  align,
-  elements,
-  updateElements,
-  multiSelectIds
+  stage: Konva.Stage,
+  align: AlignType,
+  elements: CanvasElement[],
+  updateElements: (elements: CanvasElement[]) => void,
+  multiSelectIds: Set<string>
 ) {
-  const multiSelected = (e) => multiSelectIds.has(e.id);
+  const multiSelected = (e: CanvasElement): boolean => multiSelectIds.has(e.id);
   if (align === "middle" || align === "center") {
     const cx = stage.width() / 2;
     const cy = stage.height() / 2;
     updateElements(
-      elements.map((e, i) => {
+      elements.map((e: CanvasElement) => {
         if (!multiSelected(e)) return e;
         if (align === "middle") {
           return e.type === "clippedImage"
-            ? { ...e, shapeX: cx }
-            : { ...e, x: cx };
+            ? ({ ...e, shapeX: cx } as CanvasElement)
+            : ('x' in e ? { ...e, x: cx } : e) as CanvasElement;
         }
         if (align === "center") {
           return e.type === "clippedImage"
-            ? { ...e, shapeY: cy }
-            : { ...e, y: cy };
+            ? ({ ...e, shapeY: cy } as CanvasElement)
+            : ('y' in e ? { ...e, y: cy } : e) as CanvasElement;
         }
         return e;
       })
@@ -870,33 +1066,40 @@ export function alignMultiSelect2(
     return;
   }
 
-  const findShape = (id) => stage.find(`#${id}`)[0];
-  const allVertices = elements.map((e) =>
+  const findShape = (id: string): Konva.Node | undefined => stage.find(`#${id}`)[0];
+  const allVertices = elements.map((e: CanvasElement) =>
     multiSelected(e) ? vertices(e, findShape) : null
   );
-  const flatVertices = allVertices.filter((v) => v).flat();
-  const getTop = (vertices) => Math.min(...vertices.map((v) => v.y));
-  const getBottom = (vertices) => Math.max(...vertices.map((v) => v.y));
-  const getLeft = (vertices) => Math.min(...vertices.map((v) => v.x));
-  const getRight = (vertices) => Math.max(...vertices.map((v) => v.x));
+  const flatVertices = allVertices.filter((v): v is VertexPoint[] => v !== null).flat();
+  const getTop = (verts: VertexPoint[]): number => Math.min(...verts.map((v: VertexPoint) => v.y));
+  const getBottom = (verts: VertexPoint[]): number => Math.max(...verts.map((v: VertexPoint) => v.y));
+  const getLeft = (verts: VertexPoint[]): number => Math.min(...verts.map((v: VertexPoint) => v.x));
+  const getRight = (verts: VertexPoint[]): number => Math.max(...verts.map((v: VertexPoint) => v.x));
 
-  const func = {
+  const func: Record<string, (verts: VertexPoint[]) => number> = {
     top: getTop,
     bottom: getBottom,
     left: getLeft,
     right: getRight,
-  }[align];
+  };
 
-  const target = func(flatVertices);
+  const targetFunc = func[align];
+  if (!targetFunc) return;
+
+  const target = targetFunc(flatVertices);
   updateElements(
-    elements.map((e, i) => {
+    elements.map((e: CanvasElement, i: number) => {
       if (!multiSelected(e)) return e;
       const vs = allVertices[i];
-      const dy = align === "top" || align === "bottom" ? target - func(vs) : 0;
-      const dx = align === "left" || align === "right" ? target - func(vs) : 0;
-      return e.type === "clippedImage"
-        ? { ...e, shapeX: e.shapeX + dx, shapeY: e.shapeY + dy }
-        : { ...e, x: e.x + dx, y: e.y + dy };
+      if (!vs) return e;
+      const dy = align === "top" || align === "bottom" ? target - targetFunc(vs) : 0;
+      const dx = align === "left" || align === "right" ? target - targetFunc(vs) : 0;
+      if (e.type === "clippedImage") {
+        return { ...e, shapeX: e.shapeX + dx, shapeY: e.shapeY + dy } as CanvasElement;
+      } else if ('x' in e && 'y' in e) {
+        return { ...e, x: e.x + dx, y: e.y + dy } as CanvasElement;
+      }
+      return e;
     })
   );
 }

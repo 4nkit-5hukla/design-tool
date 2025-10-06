@@ -9,28 +9,28 @@ import { useDraggable, useEventListener, useElements, useFocusable, useZoom, use
 import { alignMultiSelect2 } from "Hooks/useMultiSelect";
 import { Dispatch } from "react";
 import { SetStateAction } from "react";
-import { ShapeConfig } from "konva/lib/Shape";
+import { CanvasElement } from "Interfaces/Elements";
 
 interface IElementsContext {
-  elements: Konva.ShapeConfig[];
-  setElements: (elements: Konva.ShapeConfig[]) => void;
-  selectedEl: Konva.ShapeConfig | null | undefined;
+  elements: CanvasElement[];
+  setElements: (elements: CanvasElement[]) => void;
+  selectedEl: CanvasElement | null | undefined;
   selected: null | string;
   focused: null | string;
   draggable: boolean;
-  getElementById: (id: string) => Konva.ShapeConfig | undefined;
+  getElementById: (id: string) => CanvasElement | undefined;
   setDraggable: (draggable: boolean) => void;
-  updateElement: <T extends Konva.ShapeConfig>(
+  updateElement: <T extends Partial<CanvasElement>>(
     config: T & { id: string },
     options?: { saveHistory?: boolean }
-  ) => Konva.ShapeConfig[];
-  updateElements: <T extends Konva.ShapeConfig>(config: T[], options?: { saveHistory?: boolean }) => Konva.ShapeConfig[];
-  addElement: <T extends Konva.ShapeConfig>(shape: T | T[]) => Konva.ShapeConfig[];
-  duplicateElement: (id: string, avgMoveUnit: number) => Konva.ShapeConfig;
+  ) => CanvasElement[];
+  updateElements: <T extends Partial<CanvasElement>>(config: T[], options?: { saveHistory?: boolean }) => CanvasElement[];
+  addElement: <T extends CanvasElement>(shape: T | T[]) => CanvasElement[];
+  duplicateElement: (id: string, avgMoveUnit: number) => CanvasElement;
   designColors: string[] | undefined;
   designFonts: string[];
   removeElement: (id: string) => void;
-  onDragStart: (e: Konva.KonvaEventObject<DragEvent>, shape: Konva.ShapeConfig) => void;
+  onDragStart: (e: Konva.KonvaEventObject<DragEvent>, shape: CanvasElement) => void;
   onDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void;
   unSelect: () => void;
@@ -75,10 +75,10 @@ const defaultValue = {
   updateElements: () => [],
   designColors: undefined,
   designFonts: [],
-  addElement: () => [{ x: 0, y: 0 }],
+  addElement: () => [],
   removeElement: () => {},
   duplicateElement: () => {
-    return { x: 0, y: 0 };
+    return {} as CanvasElement;
   },
   onDragStart: () => {},
   onDragMove: () => {},
@@ -279,38 +279,66 @@ const Elements = ({ children }: { children: ReactNode }) => {
         switch (key.toUpperCase()) {
           case "ArrowUp".toUpperCase():
             event.preventDefault();
-            if (selected) {
-              updateElement({
-                id: selected,
-                y: (selectedEl?.y ?? 0) - moveDistance,
-              });
+            if (selected && selectedEl) {
+              if (selectedEl.type === "clippedImage") {
+                updateElement({
+                  id: selected,
+                  shapeY: selectedEl.shapeY - moveDistance,
+                } as any);
+              } else {
+                updateElement({
+                  id: selected,
+                  y: ((selectedEl as any).y ?? 0) - moveDistance,
+                } as any);
+              }
             }
             break;
           case "ArrowDown".toUpperCase():
             event.preventDefault();
-            if (selected) {
-              updateElement({
-                id: selected,
-                y: (selectedEl?.y ?? 0) + moveDistance,
-              });
+            if (selected && selectedEl) {
+              if (selectedEl.type === "clippedImage") {
+                updateElement({
+                  id: selected,
+                  shapeY: selectedEl.shapeY + moveDistance,
+                } as any);
+              } else {
+                updateElement({
+                  id: selected,
+                  y: ((selectedEl as any).y ?? 0) + moveDistance,
+                } as any);
+              }
             }
             break;
           case "ArrowLeft".toUpperCase():
             event.preventDefault();
-            if (selected) {
-              updateElement({
-                id: selected,
-                x: (selectedEl?.x ?? 0) - moveDistance,
-              });
+            if (selected && selectedEl) {
+              if (selectedEl.type === "clippedImage") {
+                updateElement({
+                  id: selected,
+                  shapeX: selectedEl.shapeX - moveDistance,
+                } as any);
+              } else {
+                updateElement({
+                  id: selected,
+                  x: ((selectedEl as any).x ?? 0) - moveDistance,
+                } as any);
+              }
             }
             break;
           case "ArrowRight".toUpperCase():
             event.preventDefault();
-            if (selected) {
-              updateElement({
-                id: selected,
-                x: (selectedEl?.x ?? 0) + moveDistance,
-              });
+            if (selected && selectedEl) {
+              if (selectedEl.type === "clippedImage") {
+                updateElement({
+                  id: selected,
+                  shapeX: selectedEl.shapeX + moveDistance,
+                } as any);
+              } else {
+                updateElement({
+                  id: selected,
+                  x: ((selectedEl as any).x ?? 0) + moveDistance,
+                } as any);
+              }
             }
             break;
           case "Delete".toUpperCase():
@@ -376,16 +404,24 @@ const Elements = ({ children }: { children: ReactNode }) => {
           elements.map((e) => {
             const lookCondition = e.id ? !multiSelectIds.has(e.id) : false;
             if (lookCondition) return e;
+            if (e.type === "clippedImage") {
+              return {
+                ...e,
+                shapeX: e.shapeX + dx,
+                shapeY: e.shapeY + dy,
+              };
+            }
             return {
               ...e,
-              x: (e.x ?? 0) + dx,
-              y: (e.y ?? 0) + dy,
-            };
+              x: ((e as any).x ?? 0) + dx,
+              y: ((e as any).y ?? 0) + dy,
+            } as CanvasElement;
           })
         );
       };
       const align2 = (align: string) => {
-        alignMultiSelect2(stage, align, elements, setElements, multiSelectIds);
+        if (!stage) return;
+        alignMultiSelect2(stage, align as any, elements, setElements, multiSelectIds);
         setMultiSelectIds(new Set());
         setTimeout(() => {
           setMultiSelectIds(new Set(multiSelectIds));
@@ -393,11 +429,11 @@ const Elements = ({ children }: { children: ReactNode }) => {
       };
       const groupUngroup = () => {
         const isGrouped = () => {
-          const findElement = (elements: ShapeConfig[], id: string): ShapeConfig =>
-            elements.find((e) => e.id === id) as ShapeConfig;
+          const findElement = (elements: CanvasElement[], id: string): CanvasElement | undefined =>
+            elements.find((e) => e.id === id);
           const getElementGroup = (id: string) => {
             const element = findElement(elements, id);
-            return element.group || [];
+            return (element as any)?.group || [];
           };
           const equal = (xs: number[], ys: number[]) => xs.length === ys.length && xs.every((x, i) => x === ys[i]);
           const allEqual = (list: any[]) => list.reduce((a, b) => (equal(a, b) ? a : NaN));
@@ -406,13 +442,13 @@ const Elements = ({ children }: { children: ReactNode }) => {
         };
 
         const group = isGrouped() ? [] : [...multiSelectIds];
-        const updateGroup = (e: ShapeConfig) => {
+        const updateGroup = (e: CanvasElement) => {
           const lookCondition = e.id ? !multiSelectIds.has(e.id) : false;
           if (lookCondition) return e;
           return {
             ...e,
             group,
-          };
+          } as CanvasElement;
         };
         setElements(elements.map(updateGroup));
       };

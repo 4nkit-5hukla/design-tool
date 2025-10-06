@@ -36,7 +36,7 @@ const History = ({ children }: { children: ReactNode }) => {
     currentState.forEach((element, i) => {
       if (element.type !== "text") return;
       const next = nextState[i];
-      if (!next) return;
+      if (!next || next.type !== "text") return;
       const scale = next.fontSize / element.fontSize;
       const shape = stageRef.current?.find(`#${element.id}`)?.[0];
       if (shape) {

@@ -1,19 +1,17 @@
 import { FC } from "react";
-import { BrowserRouter as Router, useRoutes } from "react-router-dom";
+import { RouteObject, BrowserRouter as Router, useRoutes } from "react-router-dom";
 
 import Home from "Pages/Home";
 import Preview from "Pages/Preview";
 import NotFound404 from "Pages/404";
 
-const AppRoutes: FC = () => {
-  const routes = useRoutes([
-    { path: "/", element: <Home /> },
-    { path: "/preview", element: <Preview /> },
-    { path: "*", element: <NotFound404 /> },
-  ]);
+const routes: RouteObject[] = [
+  { path: "/", element: <Home /> },
+  { path: "/preview", element: <Preview /> },
+  { path: "*", element: <NotFound404 /> },
+];
 
-  return routes;
-};
+const AppRoutes: FC = () => useRoutes(routes);
 
 const AppRouter: FC = () => {
   return (

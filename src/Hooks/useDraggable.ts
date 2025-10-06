@@ -1,6 +1,7 @@
 import Konva from "konva";
 import { useState } from "react";
 import { UseDraggableParams } from "Interfaces";
+import { CanvasElement } from "Interfaces/Elements";
 
 export const useDraggable = ({ updateElement }: UseDraggableParams) => {
   const [draggable, setDraggable] = useState(true);
@@ -21,30 +22,47 @@ export const useDraggable = ({ updateElement }: UseDraggableParams) => {
 
   const onDragStart = (
     _: Konva.KonvaEventObject<DragEvent>,
-    shape: Konva.ShapeConfig
+    shape: CanvasElement
   ) => {
     setSelected(shape.id as string);
   };
 
   const onDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
-    updateElement(
-      {
-        id: selected as string,
-        x: e.target.x(),
-        y: e.target.y(),
-      },
-      {
-        saveHistory: false,
-      }
-    );
+    const config: any = {
+      id: selected as string,
+    };
+    
+    // ClippedImageElement uses shapeX/shapeY instead of x/y
+    const shape = e.target;
+    const attrs = shape.attrs;
+    if (attrs.type === "clippedImage") {
+      config.shapeX = shape.x();
+      config.shapeY = shape.y();
+    } else {
+      config.x = shape.x();
+      config.y = shape.y();
+    }
+    
+    updateElement(config, { saveHistory: false });
   };
 
   const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    updateElement({
+    const config: any = {
       id: selected as string,
-      x: e.target.x(),
-      y: e.target.y(),
-    });
+    };
+    
+    // ClippedImageElement uses shapeX/shapeY instead of x/y
+    const shape = e.target;
+    const attrs = shape.attrs;
+    if (attrs.type === "clippedImage") {
+      config.shapeX = shape.x();
+      config.shapeY = shape.y();
+    } else {
+      config.x = shape.x();
+      config.y = shape.y();
+    }
+    
+    updateElement(config);
   };
 
   return {
