@@ -1,13 +1,27 @@
-const mapCallBack = ({ type, ...rest }: any, index: number) =>
+interface ShapeData {
+  type: string;
+  descendants?: ShapeData[];
+  globalCompositeOperation?: string;
+  style?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface RenderShapeProps {
+  width: number;
+  height: number;
+  data: ShapeData[];
+}
+
+const mapCallBack = ({ type, ...rest }: ShapeData, index: number) =>
   type === "group"
     ? (({ descendants, globalCompositeOperation, ...groupProps }) => (
         <g key={index} {...groupProps}>
-          {descendants.map(mapCallBack)}
+          {descendants?.map(mapCallBack)}
         </g>
       ))(rest)
     : ((pathProps) => <path key={index} {...pathProps} />)(rest);
 
-export const RenderShape = ({ width, height, data }: any) => (
+export const RenderShape = ({ width, height, data }: RenderShapeProps) => (
   <svg
     width={width}
     height={height}

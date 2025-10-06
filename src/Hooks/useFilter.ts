@@ -1,10 +1,12 @@
-export const useFilter = ({ selected, updateElement }: any) => {
+import { UseFilterParams } from "Interfaces";
+
+export const useFilter = ({ selected, updateElement }: UseFilterParams) => {
   const previewFilter =
-    ({ type }: any) =>
-    (value: any) => {
+    ({ type }: { type: string }) =>
+    (value: number | boolean) => {
       updateElement(
         {
-          id: selected,
+          id: selected as string,
           [type]: value,
         },
         {
@@ -14,10 +16,10 @@ export const useFilter = ({ selected, updateElement }: any) => {
     };
 
   const applyFilter =
-    ({ type }: any) =>
-    (value: any) => {
+    ({ type }: { type: string }) =>
+    (value: number | boolean) => {
       updateElement({
-        id: selected,
+        id: selected as string,
         [type]: value,
       });
     };

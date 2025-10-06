@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { UseZoomParams } from "Interfaces";
 
-export const useZoom = ({ origin: { x, y } }: any) => {
+export const useZoom = ({ origin: { x, y } }: UseZoomParams) => {
   const [zoom, setZoom] = useState(100);
   const [stageX, setStageX] = useState(x);
   const [stageY, setStageY] = useState(y);

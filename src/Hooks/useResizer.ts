@@ -23,7 +23,9 @@ export const useResizer = ({
 
   useEffect(() => {
     const handleResize = () => {
-      const container: any = ref.current;
+      const container = ref.current;
+
+      if (!container) return;
 
       const containerWidth = container.offsetWidth;
 

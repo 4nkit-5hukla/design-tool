@@ -1,9 +1,10 @@
+import Konva from "konva";
 import { useState } from "react";
 
 export const useFocusable = () => {
   const [focused, setFocused] = useState<string | null>(null);
 
-  const unFocus = (e?: any) => {
+  const unFocus = (e?: Konva.KonvaEventObject<MouseEvent>) => {
     if (e === undefined) {
       setFocused(null);
       return;

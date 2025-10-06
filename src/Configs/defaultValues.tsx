@@ -64,9 +64,7 @@ const constructColor = (hexString: string) => {
       }
     }
   }
-  const colorObj: any = {};
-  colorObj.hue = hue;
-  colorObj.hex = hexString;
+  const colorObj: { hue: number; hex: string } = { hue, hex: hexString };
   return colorObj;
 };
 

@@ -14,11 +14,12 @@ export const useStorage = (
       try {
         // Parse stored json or if none return initialValue
         return jsonValue ? JSON.parse(jsonValue) : defaultValue;
-      } catch (error: any) {
-        return error.name === "SyntaxError" ? jsonValue : defaultValue;
+      } catch (error) {
+        const err = error as Error;
+        return err.name === "SyntaxError" ? jsonValue : defaultValue;
       }
     }),
-    setValue = (value: string | Function) => {
+    setValue = (value: string | ((prev: string) => string)) => {
       try {
         // Allow value to be a function so we have same API as useState
         const valueToStore =
@@ -35,7 +36,7 @@ export const useStorage = (
       }
     };
 
-  return [storedValue, setValue];
+  return [storedValue, setValue] as const;
 };
 
 export const useLocalStorage = (key: string, defaultValue: string) => {

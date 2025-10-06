@@ -24,7 +24,7 @@ export const useElements = () => {
   const updateElement = <T extends Konva.ShapeConfig>(
     config: T & { id: string },
     options: {
-      saveHistory: boolean;
+      saveHistory?: boolean;
     } = {
       saveHistory: true,
     }
@@ -51,7 +51,7 @@ export const useElements = () => {
   const updateElements = <T extends Konva.ShapeConfig>(
     configs: T[],
     options: {
-      saveHistory: boolean;
+      saveHistory?: boolean;
     } = {
       saveHistory: true,
     }
@@ -369,16 +369,19 @@ export const useElements = () => {
   };
 
   const duplicateElement = (id: string, avgMoveUnit: number): Konva.ShapeConfig => {
-    const element: any = elements.find((item) => item.id === id);
-    const created = {
+    const element = elements.find((item) => item.id === id);
+    if (!element) return {} as Konva.ShapeConfig;
+    
+    const created: Konva.ShapeConfig = {
       ...element,
       id: generateId(),
-      x: element.x + avgMoveUnit,
-      y: element.y + avgMoveUnit,
+      x: (element.x ?? 0) + avgMoveUnit,
+      y: (element.y ?? 0) + avgMoveUnit,
     };
     if (element.type === "clippedImage") {
-      created.shapeX += avgMoveUnit;
-      created.shapeY += avgMoveUnit;
+      const clippedElement = element as Konva.ShapeConfig & { shapeX: number; shapeY: number };
+      (created as Konva.ShapeConfig & { shapeX: number; shapeY: number }).shapeX = clippedElement.shapeX + avgMoveUnit;
+      (created as Konva.ShapeConfig & { shapeX: number; shapeY: number }).shapeY = clippedElement.shapeY + avgMoveUnit;
     }
     const result = elements.concat([created]);
     setElements(result);
@@ -387,21 +390,24 @@ export const useElements = () => {
   };
 
   const copyElement = (id: string, avgMoveUnit: number) => {
-    const element: any = elements.find((item) => item.id === id);
+    const element = elements.find((item) => item.id === id);
+    if (!element) return;
+    
     if (element.type === "clippedImage") {
+      const clippedElement = element as Konva.ShapeConfig & { shapeX: number; shapeY: number };
       setCopiedEl({
         ...element,
         id: generateId(),
-        shapeX: element.shapeX + avgMoveUnit,
-        shapeY: element.shapeY + avgMoveUnit,
+        shapeX: clippedElement.shapeX + avgMoveUnit,
+        shapeY: clippedElement.shapeY + avgMoveUnit,
       });
       return;
     }
     setCopiedEl({
       ...element,
       id: generateId(),
-      x: element.x + avgMoveUnit,
-      y: element.y + avgMoveUnit,
+      x: (element.x ?? 0) + avgMoveUnit,
+      y: (element.y ?? 0) + avgMoveUnit,
     });
   };
 

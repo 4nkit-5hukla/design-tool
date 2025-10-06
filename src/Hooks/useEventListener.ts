@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
-export const useEventListener = (
-  eventType: string,
-  callback: (event: any) => void,
+export const useEventListener = <K extends keyof WindowEventMap>(
+  eventType: K,
+  callback: (event: WindowEventMap[K]) => void,
   element: HTMLElement | Document | Window = window
 ) => {
   const callbackRef = useRef(callback);
@@ -13,7 +13,7 @@ export const useEventListener = (
 
   useEffect(() => {
     if (element == null) return;
-    const handler = (event: any) => callbackRef.current(event);
+    const handler = (event: Event) => callbackRef.current(event as WindowEventMap[K]);
     element.addEventListener(eventType, handler);
 
     return () => element.removeEventListener(eventType, handler);

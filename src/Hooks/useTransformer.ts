@@ -9,12 +9,12 @@ export const useTransformer = <T>({
 }: {
   isSelected: boolean;
   ref: RefObject<T>;
-  transformer: RefObject<Konva.Transformer> | any;
+  transformer: RefObject<Konva.Transformer>;
 }) => {
   useEffect(() => {
     if (transformer.current !== null && isSelected) {
-      transformer.current.nodes([ref.current]);
-      transformer.current.getLayer().batchDraw();
+      transformer.current.nodes([ref.current as Konva.Node]);
+      transformer.current.getLayer()?.batchDraw();
     }
   }, [isSelected]);
 };

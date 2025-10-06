@@ -14,7 +14,7 @@ import { ShapeConfig } from "konva/lib/Shape";
 interface IElementsContext {
   elements: Konva.ShapeConfig[];
   setElements: (elements: Konva.ShapeConfig[]) => void;
-  selectedEl: Konva.ShapeConfig | null;
+  selectedEl: Konva.ShapeConfig | null | undefined;
   selected: null | string;
   focused: null | string;
   draggable: boolean;
@@ -22,9 +22,9 @@ interface IElementsContext {
   setDraggable: (draggable: boolean) => void;
   updateElement: <T extends Konva.ShapeConfig>(
     config: T & { id: string },
-    options?: { saveHistory: boolean }
+    options?: { saveHistory?: boolean }
   ) => Konva.ShapeConfig[];
-  updateElements: <T extends Konva.ShapeConfig>(config: T[], options?: { saveHistory: boolean }) => Konva.ShapeConfig[];
+  updateElements: <T extends Konva.ShapeConfig>(config: T[], options?: { saveHistory?: boolean }) => Konva.ShapeConfig[];
   addElement: <T extends Konva.ShapeConfig>(shape: T | T[]) => Konva.ShapeConfig[];
   duplicateElement: (id: string, avgMoveUnit: number) => Konva.ShapeConfig;
   designColors: string[] | undefined;
@@ -57,10 +57,10 @@ interface IElementsContext {
   stageY: number;
   setStageY: (y: number) => void;
 
-  stage: Konva.Stage;
-  setStage: (stage: Konva.Stage) => void;
-  layer: Konva.Layer;
-  setLayer: (layer: Konva.Layer) => void;
+  stage: Konva.Stage | undefined;
+  setStage: (stage: Konva.Stage | undefined) => void;
+  layer: Konva.Layer | undefined;
+  setLayer: (layer: Konva.Layer | undefined) => void;
   usingTool: boolean;
   toggleUsingTool: Dispatch<SetStateAction<boolean>>;
 }
@@ -122,12 +122,12 @@ const defaultValue = {
   onDrawEnd: () => {},
   points: [],
 
-  stage: {} as Konva.Stage,
+  stage: undefined,
   setStage: () => {},
-  layer: {} as Konva.Layer,
+  layer: undefined,
   setLayer: () => {},
   usingTool: false,
-  toggleUsingTool: (_: any) => {},
+  toggleUsingTool: () => {},
 };
 
 const ElementsContext = createContext<IElementsContext>(defaultValue);
@@ -171,9 +171,9 @@ const Elements = ({ children }: { children: ReactNode }) => {
 
   const { usingTool, toggleUsingTool } = useTool();
 
-  const { stage, setStage, layer, setLayer }: any = useStage();
+  const { stage, setStage, layer, setLayer } = useStage();
 
-  const selectedEl: any = selected ? getElementById(selected) : null;
+  const selectedEl = selected ? getElementById(selected) : null;
 
   // providerValue
   const providerValue: IElementsContext = {
@@ -260,7 +260,7 @@ const Elements = ({ children }: { children: ReactNode }) => {
         }
         break;
       case "L":
-        if (ctrlKey || metaKey) {
+        if ((ctrlKey || metaKey) && selected && selectedEl) {
           event.preventDefault();
           updateElement({
             id: selected,
@@ -279,41 +279,51 @@ const Elements = ({ children }: { children: ReactNode }) => {
         switch (key.toUpperCase()) {
           case "ArrowUp".toUpperCase():
             event.preventDefault();
-            updateElement({
-              id: selected,
-              y: selectedEl.y - moveDistance,
-            });
+            if (selected) {
+              updateElement({
+                id: selected,
+                y: (selectedEl?.y ?? 0) - moveDistance,
+              });
+            }
             break;
           case "ArrowDown".toUpperCase():
             event.preventDefault();
-            updateElement({
-              id: selected,
-              y: selectedEl.y + moveDistance,
-            });
+            if (selected) {
+              updateElement({
+                id: selected,
+                y: (selectedEl?.y ?? 0) + moveDistance,
+              });
+            }
             break;
           case "ArrowLeft".toUpperCase():
             event.preventDefault();
-            updateElement({
-              id: selected,
-              x: selectedEl.x - moveDistance,
-            });
+            if (selected) {
+              updateElement({
+                id: selected,
+                x: (selectedEl?.x ?? 0) - moveDistance,
+              });
+            }
             break;
           case "ArrowRight".toUpperCase():
             event.preventDefault();
-            updateElement({
-              id: selected,
-              x: selectedEl.x + moveDistance,
-            });
+            if (selected) {
+              updateElement({
+                id: selected,
+                x: (selectedEl?.x ?? 0) + moveDistance,
+              });
+            }
             break;
           case "Delete".toUpperCase():
             event.preventDefault();
-            removeElement(selected);
-            unSelect();
-            unFocus();
+            if (selected) {
+              removeElement(selected);
+              unSelect();
+              unFocus();
+            }
             break;
           case "Backspace".toUpperCase():
             event.preventDefault();
-            if (navigator.userAgent.includes("Mac")) {
+            if (navigator.userAgent.includes("Mac") && selected) {
               removeElement(selected);
               unSelect();
               unFocus();
@@ -321,23 +331,31 @@ const Elements = ({ children }: { children: ReactNode }) => {
             break;
           case "c".toUpperCase():
             event.preventDefault();
-            if (ctrlKey || metaKey) {
+            if ((ctrlKey || metaKey) && selected) {
               copyElement(selected, avgMoveUnit);
             }
             break;
           case "d".toUpperCase():
             event.preventDefault();
-            if (ctrlKey || metaKey) {
+            if ((ctrlKey || metaKey) && selected) {
               const element = duplicateElement(selected, avgMoveUnit);
-              setSelected(element.id);
+              if (element.id) {
+                setSelected(element.id as string);
+              }
             }
             break;
           case "[":
             event.preventDefault();
-            return ctrlKey || metaKey ? toBack(selected) : toBackward(selected);
+            if (selected) {
+              return ctrlKey || metaKey ? toBack(selected) : toBackward(selected);
+            }
+            break;
           case "]":
             event.preventDefault();
-            return ctrlKey || metaKey ? toFront(selected) : toForward(selected);
+            if (selected) {
+              return ctrlKey || metaKey ? toFront(selected) : toForward(selected);
+            }
+            break;
           default:
         }
       }
@@ -352,6 +370,7 @@ const Elements = ({ children }: { children: ReactNode }) => {
       };
       const rect = stage ? stage.find(`#multiSelectRect`)[0] : undefined;
       const move = (dx: number, dy: number) => {
+        if (!rect) return;
         rect.setAttrs({ x: rect.x() + dx, y: rect.y() + dy });
         setElements(
           elements.map((e) => {
@@ -419,17 +438,21 @@ const Elements = ({ children }: { children: ReactNode }) => {
           }
           break;
         case "[":
-          if (ctrlKey || metaKey) {
-            toBack(selected);
-          } else {
-            toBackward(selected);
+          if (selected) {
+            if (ctrlKey || metaKey) {
+              toBack(selected);
+            } else {
+              toBackward(selected);
+            }
           }
           break;
         case "]":
-          if (ctrlKey || metaKey) {
-            toFront(selected);
-          } else {
-            toForward(selected);
+          if (selected) {
+            if (ctrlKey || metaKey) {
+              toFront(selected);
+            } else {
+              toForward(selected);
+            }
           }
           break;
         case "T":
@@ -458,7 +481,7 @@ const Elements = ({ children }: { children: ReactNode }) => {
     }
   });
 
-  useEventListener("message", (event: any) => {
+  useEventListener("message", (event: MessageEvent) => {
     const parent = event.source ?? null;
     // now we can do whatever we want with the message data.
     // in this case, displaying it, and then sending it back
@@ -466,6 +489,7 @@ const Elements = ({ children }: { children: ReactNode }) => {
     if (event.data.length > 0) {
       setElements(event.data);
       setTimeout(() => {
+        if (!layer) return;
         const base64 = layer.toDataURL({
           pixelRatio: 2,
           width: canvas.width,
@@ -477,7 +501,9 @@ const Elements = ({ children }: { children: ReactNode }) => {
           success: true,
           request: { base64 },
         };
-        parent && parent.postMessage(response, "*");
+        if (parent) {
+          parent.postMessage(response, { targetOrigin: "*" } as WindowPostMessageOptions);
+        }
       }, 200);
     }
   });

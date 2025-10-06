@@ -1,9 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
+import { GoogleFont as GoogleFontType, GoogleFontProps } from "Interfaces";
 
-const createLink = (fonts: any, subsets: any, display: any) => {
+const createLink = (fonts: GoogleFontType[], subsets: string[] | undefined, display: string | undefined) => {
   const families = fonts
-    .reduce((acc: any, font: any) => {
+    .reduce((acc: string[], font: GoogleFontType) => {
       const family = font.font.replace(/ +/g, "+");
       const weights = (font.weights || []).join(",");
 
@@ -26,7 +27,7 @@ const createLink = (fonts: any, subsets: any, display: any) => {
   return link;
 };
 
-const GoogleFont = ({ fonts, subsets, display = "swap", onLoad }: any) => {
+const GoogleFont = ({ fonts, subsets, display = "swap", onLoad }: GoogleFontProps) => {
   const [link, setLink] = useState(createLink(fonts, subsets, display));
 
   useEffect(() => {

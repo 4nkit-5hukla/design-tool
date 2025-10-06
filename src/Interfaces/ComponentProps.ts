@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction, ChangeEvent, MouseEvent as ReactMouseEvent } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
 

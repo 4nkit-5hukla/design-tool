@@ -7,7 +7,7 @@ interface AppStateProps {
 }
 
 interface FontMeta {
-  [key: string]: unknown;
+  [key: string]: string | number | boolean | string[] | number[] | boolean[];
 }
 
 interface AppStateContextType {
@@ -36,8 +36,8 @@ interface AppStateContextType {
   safeFonts: string[];
   fontsMeta: FontMeta | undefined;
   setFontsMeta: (meta: FontMeta) => void;
-  fontsData: unknown[];
-  setFontsData: (data: unknown[]) => void;
+  fontsData: string[];
+  setFontsData: (data: string[]) => void;
 }
 
 const AppContext = createContext<AppStateContextType | null>(null);
@@ -69,7 +69,7 @@ const AppState = ({ children }: AppStateProps) => {
   const stageRef = useRef<Konva.Stage>(null);
   // States
   const [fontsMeta, setFontsMeta] = useState<FontMeta | undefined>();
-  const [fontsData, setFontsData] = useState<unknown[]>([]);
+  const [fontsData, setFontsData] = useState<string[]>([]);
   const [editSelected, toggleEditSelected] = useState<boolean>(false);
   const [editText, toggleEditText] = useState<boolean>(false);
   const [editingData, toggleEditingData] = useState<boolean>(false);

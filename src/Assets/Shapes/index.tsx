@@ -4,7 +4,14 @@ export * from "./Square";
 export * from "./Star";
 export * from "./Triangle";
 
-export const RenderSolidShape = ({ d, fill, width, height }: any) => (
+interface SolidShapeProps {
+  d: string;
+  fill: string;
+  width: number;
+  height: number;
+}
+
+export const RenderSolidShape = ({ d, fill, width, height }: SolidShapeProps) => (
   <svg
     width={width}
     height={height}

@@ -2,11 +2,19 @@ import { shape1data } from "./data";
 
 const { width, height, data } = shape1data;
 
-const mapCallBack = ({ type, ...rest }: any, index: number) =>
+interface ShapeData {
+  type: string;
+  descendants?: ShapeData[];
+  globalCompositeOperation?: string;
+  style?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+const mapCallBack = ({ type, ...rest }: ShapeData, index: number) =>
   type === "group" ? (
     (({ descendants, globalCompositeOperation, ...groupProps }) => (
       <g key={index} {...groupProps}>
-        {descendants.map(mapCallBack)}
+        {descendants?.map(mapCallBack)}
       </g>
     ))(rest)
   ) : (
