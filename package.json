@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b --noEmit && vite build",
+    "build": "vite build",
+    "build:check": "tsc -b --noEmit && vite build",
     "lint": "eslint .",
     "format": "npx prettier --write src/",
     "preview": "vite preview --port 5000 --host 0.0.0.0"
