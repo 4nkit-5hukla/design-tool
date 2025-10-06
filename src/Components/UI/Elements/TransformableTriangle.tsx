@@ -1,18 +1,21 @@
-import { FC, Fragment, useRef } from "react";
+import { FC, Fragment, useRef, RefObject } from "react";
 import { Path, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
+import { PathElement } from "Interfaces/Elements";
 
-interface TransformableTriangleProps {
-  onDragStart: (shape: Konva.ShapeConfig) => void;
+interface TransformableTriangleProps extends Omit<PathElement, "type"> {
+  onDragStart: (shape: PathElement) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
-  onTransform: (e: Record<string, unknown>) => void;
+  onTransform: (config: Partial<PathElement>) => void;
   onClick: (e: KonvaEventObject<MouseEvent>) => void;
   isSelected: boolean;
-  [key: string]: unknown;
+  d: string;
+  draggable?: boolean;
+  lock?: boolean;
 }
 
 const TransformableTriangle: FC<TransformableTriangleProps> = ({
@@ -23,8 +26,8 @@ const TransformableTriangle: FC<TransformableTriangleProps> = ({
   isSelected,
   ...props
 }) => {
-  const triangleRef = useRef<Konva.Path | null>(null);
-  const transformerRef = useRef<Konva.Transformer | null>(null);
+  const triangleRef = useRef<Konva.Path>(null);
+  const transformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
   const snaps = Array(12)
     .fill(0)
     .map((_, i) => i * 30);
@@ -49,10 +52,11 @@ const TransformableTriangle: FC<TransformableTriangleProps> = ({
         width={props.width}
         data={props.d}
         onClick={onClick}
-        onDragStart={onDragStart}
+        onDragStart={() => onDragStart({ ...props, type: "path", data: props.d } as PathElement)}
         onDragEnd={(e) => onDragEnd(e)}
-        onTransformEnd={(e) => {
+        onTransformEnd={() => {
           const node = triangleRef.current;
+          if (!node) return;
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
           node.scaleX(1);

@@ -3,6 +3,7 @@ import {
   Fragment,
   // useEffect, useState,
   useRef,
+  RefObject,
 } from "react";
 import { Group, Image, Rect, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
@@ -10,18 +11,42 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
+import { ImageElement } from "Interfaces/Elements";
+
+interface ClipData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scaleX: number;
+  scaleY: number;
+}
 
 interface TransformableImageExpProps {
-  onDragStart: (element: Konva.ShapeConfig) => void;
+  onDragStart: (element: ImageElement) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
-  onTransform: (e: Record<string, unknown>) => void;
+  onTransform: (config: Partial<ImageElement>) => void;
   onClick: (e: KonvaEventObject<MouseEvent>) => void;
   isSelected: boolean;
-  src: Konva.ImageConfig["image"];
+  src: HTMLImageElement;
   maxWidth: number;
   canvasWidth: number;
   canvasHeight: number;
-  [key: string]: unknown;
+  rgb?: boolean;
+  filters?: Array<(imageData: ImageData) => void>;
+  draggable?: boolean;
+  lock?: boolean;
+  isCropping?: boolean;
+  clipData?: ClipData;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scaleX: number;
+  scaleY: number;
+  rotation?: number;
+  id: string;
+  type: "image";
 }
 
 export const TransformableImageExp: FC<TransformableImageExpProps> = ({
@@ -32,26 +57,26 @@ export const TransformableImageExp: FC<TransformableImageExpProps> = ({
   isSelected,
   maxWidth,
   src,
-  rgb,
-  filters,
-  draggable,
-  lock,
-  isCropping,
-  clipData,
+  rgb = false,
+  filters = [],
+  draggable = true,
+  lock = false,
+  isCropping = false,
+  clipData = { x: 0, y: 0, width: 100, height: 100, scaleX: 1, scaleY: 1 },
   canvasHeight,
   canvasWidth,
   ...props
 }) => {
   // const [height, setHeight] = useState<number>(0);
   // const [width, setWidth] = useState<number>(0);
-  const rootGroupRef = useRef<Konva.Group | any>();
-  const darkImageRef = useRef<Konva.Image | any>();
-  const clipRectRef = useRef<Konva.Rect | any>();
-  const imageRef = useRef<Konva.Image | any>();
+  const rootGroupRef = useRef<Konva.Group>(null);
+  const darkImageRef = useRef<Konva.Image>(null);
+  const clipRectRef = useRef<Konva.Rect>(null);
+  const imageRef = useRef<Konva.Image>(null);
 
-  const rootTransformerRef = useRef<Konva.Transformer | any>();
-  // const darkTransformerRef = useRef<Konva.Transformer | any>();
-  const rectTransformerRef = useRef<Konva.Transformer | any>();
+  const rootTransformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
+  // const darkTransformerRef = useRef<Konva.Transformer>(null);
+  const rectTransformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
 
   useTransformer({
     isSelected,
@@ -127,7 +152,7 @@ export const TransformableImageExp: FC<TransformableImageExpProps> = ({
         offsetY={props.height / 2}
         onClick={onClick}
         draggable={!lock ? draggable : false}
-        onDragStart={onDragStart}
+        onDragStart={() => onDragStart(props as ImageElement)}
         onDragEnd={(e) => onDragEnd(e)}
         onTransformEnd={() => {
           const node = rootGroupRef.current;
@@ -195,7 +220,7 @@ export const TransformableImageExp: FC<TransformableImageExpProps> = ({
         width={clipData.width}
         height={clipData.height}
         draggable
-        onDragMove={(e) => {
+        onDragMove={() => {
           // const node = e.target;
           // onTransform({
           //   ...props,
@@ -206,7 +231,7 @@ export const TransformableImageExp: FC<TransformableImageExpProps> = ({
           //   },
           // });
         }}
-        onTransform={(e) => {
+        onTransform={() => {
           // const node = e.target;
           // onTransform({
           //   ...props,

@@ -1,18 +1,20 @@
-import { FC, Fragment, useRef } from "react";
+import { FC, Fragment, useRef, RefObject } from "react";
 import { Rect, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
+import { RectangleElement } from "Interfaces/Elements";
 
-interface TransformableRectProps {
-  onDragStart: (shape: Konva.ShapeConfig) => void;
+interface TransformableRectProps extends Omit<RectangleElement, "type"> {
+  onDragStart: (shape: RectangleElement) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
-  onTransform: (e: Record<string, number>) => void;
+  onTransform: (config: Partial<RectangleElement>) => void;
   onClick: (e: KonvaEventObject<MouseEvent>) => void;
   isSelected: boolean;
-  [key: string]: unknown;
+  draggable?: boolean;
+  lock?: boolean;
 }
 
 const TransformableRect: FC<TransformableRectProps> = ({
@@ -23,8 +25,8 @@ const TransformableRect: FC<TransformableRectProps> = ({
   isSelected,
   ...props
 }) => {
-  const rectRef = useRef<Konva.Rect | any>();
-  const transformerRef = useRef<Konva.Transformer | any>();
+  const rectRef = useRef<Konva.Rect>(null);
+  const transformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
 
   useTransformer({
     isSelected,
@@ -38,10 +40,11 @@ const TransformableRect: FC<TransformableRectProps> = ({
         onClick={onClick}
         ref={rectRef}
         {...props}
-        onDragStart={onDragStart}
+        onDragStart={() => onDragStart(props as RectangleElement)}
         onDragEnd={(e) => onDragEnd(e)}
         onTransformEnd={() => {
           const node = rectRef.current;
+          if (!node) return;
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
           node.scaleX(1);
@@ -69,7 +72,6 @@ const TransformableRect: FC<TransformableRectProps> = ({
             anchorSize={9}
             anchorCornerRadius={0}
             rotateAnchorOffset={30}
-            // keepRatio={true}
             flipEnabled={true}
             rotateEnabled={true}
             enabledAnchors={[

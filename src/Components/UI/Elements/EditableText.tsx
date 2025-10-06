@@ -2,18 +2,27 @@ import Konva from "konva";
 import { Text, Transformer } from "react-konva";
 import { Html, Portal } from "react-konva-utils";
 import { KonvaEventObject } from "konva/lib/Node";
-import { FC, useRef, useEffect, useState } from "react";
+import { FC, useRef, useEffect, useState, RefObject, CSSProperties } from "react";
 
 import { useTransformer } from "Hooks";
 import { useElementsContext } from "Contexts/Elements";
+import { TextElement } from "Interfaces/Elements";
+
+interface DivProps {
+  style: CSSProperties;
+}
+
+interface TextareaProps {
+  style: CSSProperties;
+}
 
 interface EditableTextProps {
   onDragMove: (e: KonvaEventObject<DragEvent>) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
   onClick: (e: KonvaEventObject<MouseEvent>) => void;
-  onTransform: (e: Record<string, unknown>) => void;
+  onTransform: (config: Partial<TextElement>) => void;
   onMouseDown?: (e: KonvaEventObject<MouseEvent>) => void;
-  onTransformEnd: (e: Record<string, unknown>) => void;
+  onTransformEnd: (config: Partial<TextElement>) => void;
   editText: boolean;
   toggleEditText: (edit: boolean) => void;
   isSelected: boolean;
@@ -27,7 +36,30 @@ interface EditableTextProps {
   canvasHeight: number;
   canvasWidth: number;
   name: string;
-  [key: string]: unknown;
+  x: number;
+  y: number;
+  fontSize?: number;
+  fontFamily?: string;
+  fontStyle?: string;
+  textDecoration?: string;
+  fill?: string;
+  align?: string;
+  lineHeight?: number;
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
+  width?: number;
+  height?: number;
+  opacity?: number;
+  strokeEnabled?: boolean;
+  stroke?: string;
+  strokeWidth?: number;
+  shadowEnabled?: boolean;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
 }
 
 const EditableText: FC<EditableTextProps> = ({
@@ -44,8 +76,8 @@ const EditableText: FC<EditableTextProps> = ({
   id,
   text,
   draggable,
-  lock,
-  useList,
+  lock = false,
+  useList = false,
   listType,
   canvasHeight,
   canvasWidth,
@@ -54,12 +86,11 @@ const EditableText: FC<EditableTextProps> = ({
 }) => {
   const { focused, setFocused, unFocus } = useElementsContext();
 
-  const elementRef = useRef<Konva.Text | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const transformerRef = useRef<Konva.Transformer | null>(null);
-  // const [height, setHeight] = useState<number>(0);
-  // const [width, setWidth] = useState<number>(0);
+  const elementRef = useRef<Konva.Text>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const transformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
   const [created, setCreated] = useState<boolean>(false);
+  
   const applyList = (text: string, listType: string) =>
     text
       .split("\n")
@@ -75,14 +106,15 @@ const EditableText: FC<EditableTextProps> = ({
                 : line
       )
       .join("\n");
-  const [divProps, setDivProps] = useState<any>({
+  
+  const [divProps, setDivProps] = useState<DivProps>({
     style: {
       display: "none",
       position: "absolute",
     },
   });
 
-  const [textareaProps, setTextareaProps] = useState<any>({
+  const [textareaProps, setTextareaProps] = useState<TextareaProps>({
     style: {
       display: "block",
       border: "none",
@@ -92,13 +124,13 @@ const EditableText: FC<EditableTextProps> = ({
       background: "none",
       outline: "none",
       resize: "none",
-      height: "",
-      fontSize: "",
-      lineHeight: "",
-      fontFamily: "",
-      textAlign: "",
-      color: "",
-      transform: "",
+      height: undefined,
+      fontSize: undefined,
+      lineHeight: undefined,
+      fontFamily: undefined,
+      textAlign: undefined,
+      color: undefined,
+      transform: undefined,
       transformOrigin: "left top",
       width: "100%",
       wordBreak: "keep-all",
@@ -107,28 +139,6 @@ const EditableText: FC<EditableTextProps> = ({
 
   const [originValue, setOriginValue] = useState<string>(text);
   const [textareaValue, setTextareaValue] = useState<string>(originValue);
-
-  const getTextareaWidth = (width: number) => {
-    if (!elementRef.current) return;
-    let newWidth = width;
-    if (!newWidth) {
-      newWidth = elementRef.current.text().length * elementRef.current.fontSize();
-    }
-
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-    const isFirefox = navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
-    if (isSafari || isFirefox) {
-      newWidth = Math.ceil(newWidth);
-    }
-
-    const isEdge = /Edge/.test(navigator.userAgent);
-    if (isEdge) {
-      newWidth += 1;
-    }
-
-    return newWidth;
-  };
 
   useTransformer({
     isSelected,
@@ -149,8 +159,7 @@ const EditableText: FC<EditableTextProps> = ({
         onTransform({
           id,
           text: textareaValue,
-          width: getTextareaWidth(elementRef.current.width()),
-        });
+        } as Partial<TextElement>);
       }
       setDivProps({
         style: {
@@ -160,9 +169,6 @@ const EditableText: FC<EditableTextProps> = ({
       });
 
       elementRef.current.show();
-      // if (isSelected) {
-      //   transformerRef.current.show();
-      // }
     }
   }, [focused]);
 
@@ -170,7 +176,6 @@ const EditableText: FC<EditableTextProps> = ({
     if (!elementRef.current) return;
     toggleEditText(true);
     elementRef.current.hide();
-    // transformerRef.current.hide();
 
     const textPosition = elementRef.current.absolutePosition();
 
@@ -179,13 +184,13 @@ const EditableText: FC<EditableTextProps> = ({
       y: stage.offsetY() + textPosition.y,
     };
 
-    const updatedDivProps = {
+    const updatedDivProps: DivProps = {
       ...divProps,
     };
 
     setOriginValue(textareaValue);
 
-    const updatedTextareaProps = {
+    const updatedTextareaProps: TextareaProps = {
       ...textareaProps,
       style: {
         ...textareaProps.style,
@@ -229,14 +234,14 @@ const EditableText: FC<EditableTextProps> = ({
       fontSize: `${elementRef.current.fontSize()}px`,
       lineHeight: elementRef.current.lineHeight(),
       fontFamily: elementRef.current.fontFamily(),
-      textAlign: elementRef.current.align(),
-      color: elementRef.current.fill(),
+      textAlign: (elementRef.current.align() || "left") as CSSProperties["textAlign"],
+      color: (typeof elementRef.current.fill() === "string" ? elementRef.current.fill() : "#000000") as string,
       transform: getTransform(),
       height: updatedDivProps.style.height,
       ...(elementRef.current.strokeEnabled()
         ? {
-            WebkitTextFillColor: elementRef.current.fill(),
-            WebkitTextStrokeColor: elementRef.current.stroke(),
+            WebkitTextFillColor: (typeof elementRef.current.fill() === "string" ? elementRef.current.fill() : "#000000") as string,
+            WebkitTextStrokeColor: (typeof elementRef.current.stroke() === "string" ? elementRef.current.stroke() : "#000000") as string,
             WebkitTextStrokeWidth: `${elementRef.current.strokeWidth()}px`,
           }
         : {}),
@@ -334,23 +339,21 @@ const EditableText: FC<EditableTextProps> = ({
         onClick={onClick}
         onDragMove={onDragMove}
         onDragEnd={onDragEnd}
-        onTransform={(e) => {
+        onTransform={() => {
           const node = elementRef.current;
+          if (!node) return;
           if (Math.ceil(node.height() * node.scaleY()) === Math.ceil(node.height())) {
             node.setAttrs({
               scaleX: 1,
-              // scaleY: node.scaleY(),
               width: node.width() * node.scaleX(),
               height: "auto",
-              // fontSize: Math.floor(node.fontSize() * node.scaleY()),
             });
-            onTransform({
-              width: node.width() * node.scaleX(),
-            });
+            onTransform({} as Partial<TextElement>);
           }
         }}
-        onTransformEnd={(e) => {
+        onTransformEnd={() => {
           const node = elementRef.current;
+          if (!node) return;
           const scaleX = node.scaleX();
           node.scaleX(1);
           node.scaleY(1);
@@ -359,13 +362,12 @@ const EditableText: FC<EditableTextProps> = ({
             rotation: node.rotation(),
             x: node.x(),
             y: node.y(),
-            width: node.width() * scaleX,
-            fontSize: node.fontSize() * scaleX, // relation with props.lineHeight
+            fontSize: node.fontSize() * scaleX,
             scaleX: 1,
             scaleY: 1,
           });
-          elementRef.current.show();
-          node.getLayer().batchDraw();
+          elementRef.current?.show();
+          node.getLayer()?.batchDraw();
         }}
       />
       {isSelected && (
@@ -383,7 +385,6 @@ const EditableText: FC<EditableTextProps> = ({
               .fill(0)
               .map((_, i) => i * 90)}
             rotationSnapTolerance={10}
-            // keepRatio={false}
             enabledAnchors={
               !lock ? ["top-left", "top-right", "middle-right", "bottom-right", "bottom-left", "middle-left"] : []
             }
@@ -405,21 +406,18 @@ const EditableText: FC<EditableTextProps> = ({
               onTransform({
                 id,
                 text: textareaValue,
-                width: getTextareaWidth(elementRef.current.width()),
-              });
+              } as Partial<TextElement>);
             }
             onBlurHandler();
           }}
           onKeyDown={({ key, shiftKey }) => {
             if(!elementRef.current) return;
             if ((key === "Enter" && !shiftKey) || key === "Escape") {
-              // enter key and no shift
               if (originValue !== textareaValue) {
                 onTransform({
                   id,
                   text: textareaValue,
-                  width: getTextareaWidth(elementRef.current.width()),
-                });
+                } as Partial<TextElement>);
               }
               onBlurHandler();
               elementRef.current.show();

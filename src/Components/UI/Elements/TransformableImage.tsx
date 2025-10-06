@@ -1,26 +1,60 @@
-import { FC, Fragment, useEffect, useRef, useState } from "react";
+import { FC, Fragment, useEffect, useRef, useState, RefObject } from "react";
 import { Group, Image, Rect, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
+import { Context as SceneContext } from "konva/lib/Context";
 
 import {
   // useElementCache,
   useTransformer,
 } from "Hooks";
+import { ImageElement } from "Interfaces/Elements";
 
 interface TransformableImageProps {
-  onDragStart: (element: Konva.ShapeConfig) => void;
+  onDragStart: (element: ImageElement) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
-  onTransform: (e: Record<string, unknown>) => void;
+  onTransform: (config: Partial<ImageElement>) => void;
   onClick: (e: KonvaEventObject<MouseEvent>) => void;
   isSelected: boolean;
-  src: Konva.ImageConfig["image"];
+  src: HTMLImageElement;
   maxWidth: number;
   canvasWidth: number;
   canvasHeight: number;
   stage: Konva.Stage;
-  [key: string]: unknown;
+  rgb?: boolean;
+  filters?: Array<(imageData: ImageData) => void>;
+  draggable?: boolean;
+  lock?: boolean;
+  isCropping?: boolean;
+  isCropped?: boolean;
+  id: string;
+  name?: string;
+  strokeEnabled?: boolean;
+  stroke?: string;
+  strokeWidth?: number;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowOpacity?: number;
+  shadowEnabled?: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scaleX: number;
+  scaleY: number;
+  rotation?: number;
+  type: "image";
+  blue?: number;
+  blurRadius?: number;
+  brightness?: number;
+  contrast?: number;
+  enhance?: number;
+  green?: number;
+  red?: number;
+  saturation?: number;
 }
 
 export const TransformableImage: FC<TransformableImageProps> = ({
@@ -31,15 +65,15 @@ export const TransformableImage: FC<TransformableImageProps> = ({
   isSelected,
   maxWidth,
   src,
-  rgb,
-  filters,
-  draggable,
-  lock,
-  isCropping,
-  isCropped,
+  rgb = false,
+  filters = [],
+  draggable = true,
+  lock = false,
+  isCropping = false,
+  isCropped = false,
   id,
   name,
-  strokeEnabled,
+  strokeEnabled = false,
   stroke,
   strokeWidth,
   shadowColor,
@@ -47,15 +81,15 @@ export const TransformableImage: FC<TransformableImageProps> = ({
   shadowOffsetX,
   shadowOffsetY,
   shadowOpacity,
-  shadowEnabled,
+  shadowEnabled = false,
   canvasWidth,
   canvasHeight,
   stage,
   ...props
 }) => {
-  const rootGroupRef = useRef<Konva.Group | null>(null);
-  const imageRef = useRef<Konva.Image | null>(null);
-  const rectRef = useRef<Konva.Rect | null>(null);
+  const rootGroupRef = useRef<Konva.Group>(null);
+  const imageRef = useRef<Konva.Image>(null);
+  const rectRef = useRef<Konva.Rect>(null);
 
   const initialRectWidth = 250;
   const initialRectHeight = 200;
@@ -70,12 +104,12 @@ export const TransformableImage: FC<TransformableImageProps> = ({
   const [rectX, setRectX] = useState(canvasWidth - props.x);
   const [rectY, setRectY] = useState(canvasHeight - props.y);
 
-  const rootTransformerRef = useRef<Konva.Transformer | null>(null);
-  const rectTransformerRef = useRef<Konva.Transformer | null>(null);
+  const rootTransformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
+  const rectTransformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
 
   useTransformer({
     isSelected,
-    ref: isCropped ? rectRef : rootGroupRef,
+    ref: (isCropped ? rectRef : rootGroupRef) as RefObject<Konva.Group>,
     transformer: rootTransformerRef,
   });
 
@@ -91,19 +125,11 @@ export const TransformableImage: FC<TransformableImageProps> = ({
   }, [canvasWidth, canvasHeight, props.x, props.y]);
 
   useEffect(() => {
-    // const mainImg = stage.findOne((node: any) => node.id() === id);
     if (src) {
-      // mainImg.clearCache();
-      // mainImg.drawHitFromCache();
-      // you many need to reapply cache on some props changes like shadow, stroke, etc.
-      /* mainImg.cache(); */
-      // since this update is not handled by "react-konva" and we are using Konva methods directly
-      // we have to redraw layer manually
-      /* mainImg.getLayer().batchDraw(); */
+      // You may need to reapply cache on some props changes like shadow, stroke, etc.
     }
   }, [
     src,
-    // props.id, stage
   ]);
 
   useEffect(() => {
@@ -116,16 +142,6 @@ export const TransformableImage: FC<TransformableImageProps> = ({
         });
     }
   }, [isSelected, rootTransformerRef]);
-
-  // useElementCache({
-  //   ref: rootGroupRef,
-  //   deps: [isSelected, props],
-  // });
-
-  // useElementCache({
-  //   ref: imageRef,
-  //   deps: [isSelected, props],
-  // });
 
   return (
     <Fragment>
@@ -157,18 +173,20 @@ export const TransformableImage: FC<TransformableImageProps> = ({
         onClick={onClick}
         {...(isCropping || isCropped
           ? {
-              clipFunc: (ctx: any) => {
+              clipFunc: (ctx: SceneContext) => {
                 const fakeShape = rectRef.current;
+                if (!fakeShape) return;
                 ctx.save();
                 ctx.translate(fakeShape.x() - canvasWidth / 2, fakeShape.y() - canvasHeight / 2);
-                ctx.rotate((Konva as any).getAngle(fakeShape.rotation()));
+                const angleInRadians = (fakeShape.rotation() * Math.PI) / 180;
+                ctx.rotate(angleInRadians);
                 ctx.rect(0, 0, fakeShape.width() * fakeShape.scaleX(), fakeShape.height() * fakeShape.scaleY());
                 ctx.restore();
               },
             }
           : {})}
         draggable={!lock ? draggable : false}
-        onDragStart={onDragStart}
+        onDragStart={() => onDragStart(props as ImageElement)}
         onDragEnd={(e) => onDragEnd(e)}
         onTransformEnd={() => {
           const node = rootGroupRef.current;
@@ -205,21 +223,19 @@ export const TransformableImage: FC<TransformableImageProps> = ({
           shadowOpacity={shadowOpacity}
           shadowEnabled={shadowEnabled}
           filters={[...filters, ...(rgb ? [Konva.Filters.RGB] : [])]}
-          {...{
-            blue: props.blue,
-            blurRadius: props.blurRadius,
-            brightness: props.brightness,
-            contrast: props.contrast,
-            enhance: props.enhance,
-            green: props.green,
-            red: props.red,
-            rgb: props.rgb,
-            saturation: props.saturation,
-            strokeEnabled,
-            stroke,
-            strokeWidth,
-            strokeScaleEnabled: false,
-          }}
+          blue={props.blue}
+          blurRadius={props.blurRadius}
+          brightness={props.brightness}
+          contrast={props.contrast}
+          enhance={props.enhance}
+          green={props.green}
+          red={props.red}
+          rgb={rgb}
+          saturation={props.saturation}
+          strokeEnabled={strokeEnabled}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+          strokeScaleEnabled={false}
         />
       </Group>
       {isSelected && (
@@ -258,7 +274,7 @@ export const TransformableImage: FC<TransformableImageProps> = ({
           setRectX(node.x());
           setRectY(node.y());
         }}
-        onTransform={(e) => {}}
+        onTransform={() => {}}
       />
       {isCropping && (
         <Portal selector=".top-layer" enabled={isCropping}>

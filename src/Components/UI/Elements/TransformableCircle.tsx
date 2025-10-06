@@ -1,20 +1,20 @@
-import { FC, Fragment, useRef } from "react";
+import { FC, Fragment, useRef, RefObject } from "react";
 import { Ellipse, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
+import { CircleElement } from "Interfaces/Elements";
 
-interface TransformableCircleProps {
-  onDragStart: (shape: Konva.ShapeConfig) => void;
+interface TransformableCircleProps extends Omit<CircleElement, "type"> {
+  onDragStart: (shape: CircleElement) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
-  onTransform: (e: Record<string, number>) => void;
+  onTransform: (config: Partial<CircleElement>) => void;
   onClick: (e: KonvaEventObject<MouseEvent>) => void;
   isSelected: boolean;
-  radiusX: number;
-  radiusY: number;
-  [key: string]: unknown;
+  draggable?: boolean;
+  lock?: boolean;
 }
 
 const TransformableCircle: FC<TransformableCircleProps> = ({
@@ -25,8 +25,8 @@ const TransformableCircle: FC<TransformableCircleProps> = ({
   isSelected,
   ...props
 }) => {
-  const circleRef = useRef<Konva.Ellipse | null>(null);
-  const transformerRef = useRef<Konva.Transformer | null>(null);
+  const circleRef = useRef<Konva.Ellipse>(null);
+  const transformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
   const snaps = Array(24)
     .fill(0)
     .map((_, i) => i * 15);
@@ -45,9 +45,9 @@ const TransformableCircle: FC<TransformableCircleProps> = ({
         offsetX={-props.radiusX}
         offsetY={-props.radiusY}
         onClick={onClick}
-        onDragStart={onDragStart}
+        onDragStart={() => onDragStart(props as CircleElement)}
         onDragEnd={(e) => onDragEnd(e)}
-        onTransformEnd={(e) => {
+        onTransformEnd={() => {
           const node = circleRef.current;
           if (!node) return;
 
@@ -79,17 +79,6 @@ const TransformableCircle: FC<TransformableCircleProps> = ({
             rotateAnchorOffset={30}
             rotationSnaps={snaps}
             rotationSnapTolerance={15 / 2}
-            // rotateEnabled={false}
-            // enabledAnchors={[
-            //   "top-left",
-            //   "top-center",
-            //   "top-right",
-            //   "middle-right",
-            //   "bottom-right",
-            //   "bottom-center",
-            //   "bottom-left",
-            //   "middle-left",
-            // ]}
           />
         </Portal>
       )}

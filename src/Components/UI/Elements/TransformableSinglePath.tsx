@@ -1,34 +1,21 @@
-import { FC, Fragment, useEffect, useRef } from "react";
+import { FC, Fragment, useEffect, useRef, RefObject } from "react";
 import { Path, Transformer } from "react-konva";
 import { Portal } from "react-konva-utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
 import { useTransformer } from "Hooks";
+import { PathElement } from "Interfaces/Elements";
 
-interface TransformableSinglePathProps {
+interface TransformableSinglePathProps extends Omit<PathElement, "type" | "data"> {
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
-  onTransform: (e: Record<string, unknown>) => void;
+  onTransform: (config: Partial<PathElement>) => void;
   onClick: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseDown?: (e: KonvaEventObject<MouseEvent>) => void;
   isSelected: boolean;
-  height: number;
-  width: number;
-  stroke: string;
-  strokeWidth: number;
-  strokeType?: string;
-  fill: string;
   d: string;
-  shadowColor?: string;
-  shadowBlur?: number;
-  shadowOffsetX?: number;
-  shadowOffsetY?: number;
-  shadowOpacity?: number;
-  shadowEnabled?: boolean;
   name: string;
-  lock?: boolean;
   draggable: boolean;
-  [key: string]: unknown;
 }
 
 const TransformableSinglePath: FC<TransformableSinglePathProps> = ({
@@ -55,8 +42,8 @@ const TransformableSinglePath: FC<TransformableSinglePathProps> = ({
   draggable,
   ...props
 }) => {
-  const pathRef = useRef<Konva.Path | null>(null);
-  const transformerRef = useRef<Konva.Transformer | null>(null);
+  const pathRef = useRef<Konva.Path>(null);
+  const transformerRef = useRef<Konva.Transformer>(null) as RefObject<Konva.Transformer>;
 
   useTransformer({
     isSelected,
@@ -73,7 +60,7 @@ const TransformableSinglePath: FC<TransformableSinglePathProps> = ({
           stage.content.style.cursor = `url("data:image/svg+xml,%3Csvg%20width%3D%2720%27%20height%3D%2720%27%20viewBox%3D%270%200%2020%2020%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cpath%20d%3D%27M11.8597%2017.3593L11.652%2017.395V17.6057V19.5921L5.12661%2016.2681L11.652%2012.9441V14.7281V15.0506L11.9643%2014.9702C14.9074%2014.2131%2017.0994%2011.7875%2017.0994%208.88374C17.0994%205.36349%2013.8862%202.54885%2010%202.54885C6.11384%202.54885%202.9006%205.36349%202.9006%208.88374C2.9006%209.73835%203.08658%2010.5636%203.45294%2011.3393L1.06179%2012.3371C0.52252%2011.2457%200.25%2010.0857%200.25%208.88383C0.250101%204.15038%204.59557%200.25%2010.0001%200.25C15.4046%200.25%2019.75%204.15038%2019.75%208.88383C19.75%2013.0601%2016.3711%2016.5844%2011.8597%2017.3593Z%27%20fill%3D%27%23fff%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.5%27%2F%3E%3C%2Fsvg%3E") 10 10, auto`;
         });
     }
-  }, [transformerRef.current]);
+  }, [transformerRef]);
 
   return (
     <Fragment>
@@ -83,15 +70,13 @@ const TransformableSinglePath: FC<TransformableSinglePathProps> = ({
         name={name}
         draggable={!lock ? draggable : false}
         fill={fill}
-        // scaleX={props.scaleX}
-        // scaleY={props.scaleY}
         width={width}
         height={height}
         offsetX={width / 2}
         offsetY={height / 2}
         data={d}
         stroke={stroke}
-        strokeEnabled={strokeWidth > 0}
+        strokeEnabled={(strokeWidth || 0) > 0}
         strokeWidth={strokeWidth}
         shadowColor={shadowColor}
         shadowBlur={shadowBlur}
@@ -101,20 +86,18 @@ const TransformableSinglePath: FC<TransformableSinglePathProps> = ({
         shadowEnabled={shadowEnabled}
         dash={
           strokeType === "long-dash"
-            ? [(strokeWidth / 2) * 4, (strokeWidth / 2) * 2]
+            ? [((strokeWidth || 0) / 2) * 4, ((strokeWidth || 0) / 2) * 2]
             : strokeType === "dash"
-              ? [(strokeWidth / 2) * 1.5, (strokeWidth / 2) * 1.5]
+              ? [((strokeWidth || 0) / 2) * 1.5, ((strokeWidth || 0) / 2) * 1.5]
               : [0]
         }
         hitStrokeWidth={8}
-        // lineJoin="miter|round|bevel"
-        // lineCap="square"
         fillAfterStrokeEnabled={true}
         strokeScaleEnabled={false}
         onClick={onClick}
         onMouseDown={onMouseDown}
         onDragEnd={(e) => onDragEnd(e)}
-        onTransformEnd={(e) => {
+        onTransformEnd={() => {
           const node = pathRef.current;
           if (!node) return;
 
@@ -148,7 +131,7 @@ const TransformableSinglePath: FC<TransformableSinglePathProps> = ({
               .fill(0)
               .map((_, i) => i * 90)}
             rotationSnapTolerance={10}
-            enabledAnchors={!lock ? props.useAnchors : []}
+            enabledAnchors={!lock && props.useAnchors ? ["top-left", "top-right", "bottom-right", "bottom-left"] : []}
           />
         </Portal>
       )}
