@@ -8,7 +8,7 @@
     "build": "tsc -b --noEmit && vite build",
     "lint": "eslint .",
     "format": "npx prettier --write src/",
-    "preview": "vite preview"
+    "preview": "vite preview --port 5000 --host 0.0.0.0"
   },
   "dependencies": {
     "@chaos-synthesis/react-color-picker": "^0.5.6",
