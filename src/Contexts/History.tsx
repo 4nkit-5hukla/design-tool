@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useRef, useCallback, useEffect } from "react";
 import useUndo from "use-undo";
 import { ShapesHistory } from "Interfaces";
 import { useAppState } from "./AppState";
@@ -27,10 +27,39 @@ const History = ({ children }: { children: ReactNode }) => {
   const { Provider: HistoryProvider } = HistoryContext;
   const [historyState, { set: setHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo }] = useUndo<ShapesHistory>([]);
   const { setMultiSelectIds, stageRef } = useAppState();
+  
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingStateRef = useRef<ShapesHistory | null>(null);
 
-  const saveHistory = (state: ShapesHistory) => {
-    setHistory(state);
-  };
+  const flushPendingHistory = useCallback((): ShapesHistory | null => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    
+    const flushedState = pendingStateRef.current;
+    if (flushedState) {
+      setHistory(flushedState);
+      pendingStateRef.current = null;
+    }
+    return flushedState;
+  }, [setHistory]);
+
+  const saveHistory = useCallback((state: ShapesHistory) => {
+    pendingStateRef.current = state;
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = setTimeout(() => {
+      if (pendingStateRef.current) {
+        setHistory(pendingStateRef.current);
+        pendingStateRef.current = null;
+      }
+      debounceTimerRef.current = null;
+    }, 300);
+  }, [setHistory]);
 
   const fixTextShapes = (currentState: ShapesHistory, nextState: ShapesHistory) => {
     currentState.forEach((element, i) => {
@@ -50,9 +79,11 @@ const History = ({ children }: { children: ReactNode }) => {
 
   const undo = () => {
     if (!canUndo) return;
-    const nextState = historyState.past[historyState.past.length - 1];
+    const flushedState = flushPendingHistory();
+    const currentState = flushedState ?? historyState.present;
+    const nextState = flushedState ? historyState.present : historyState.past[historyState.past.length - 1];
     if (nextState) {
-      fixTextShapes(historyState.present, nextState);
+      fixTextShapes(currentState, nextState);
     }
     setMultiSelectIds(new Set());
     undoHistory();
@@ -60,13 +91,23 @@ const History = ({ children }: { children: ReactNode }) => {
 
   const redo = () => {
     if (!canRedo) return;
-    const nextState = historyState.future[0];
-    if (nextState) {
-      fixTextShapes(historyState.present, nextState);
+    const flushedState = flushPendingHistory();
+    if (!flushedState) {
+      const currentState = historyState.present;
+      const nextState = historyState.future[0];
+      if (nextState) {
+        fixTextShapes(currentState, nextState);
+      }
     }
     setMultiSelectIds(new Set());
     redoHistory();
   };
+
+  useEffect(() => {
+    return () => {
+      flushPendingHistory();
+    };
+  }, [flushPendingHistory]);
 
   // providerValue
   const providerValue: IHistoryContext = {

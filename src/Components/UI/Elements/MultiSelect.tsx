@@ -1,4 +1,4 @@
-import { FC, useRef } from "react";
+import { FC, useRef, useEffect } from "react";
 import { Rect, Transformer } from "react-konva";
 import Konva from "konva";
 
@@ -40,16 +40,16 @@ export const MultiSelect: FC<MultiSelectProps> = ({
   const transformerRef = useRef<Konva.Transformer>(null);
   const rectRef = useRef<Konva.Rect>(null);
   
-  const refsReady = transformerRef.current && rectRef.current;
-  const transformer = transformerRef.current;
-  const rect = rectRef.current;
-  
-  if (refsReady) {
-    transformer.moveToTop();
-    if (transformer.nodes().length === 0) {
+  useEffect(() => {
+    const transformer = transformerRef.current;
+    const rect = rectRef.current;
+    
+    if (transformer && rect) {
       transformer.nodes([rect]);
+      transformer.moveToTop();
+      transformer.getLayer()?.batchDraw();
     }
-  }
+  }, [visible, x, y, width, height, rotation, scaleX, scaleY, offsetX, offsetY]);
 
   if (!visible) {
     return (
