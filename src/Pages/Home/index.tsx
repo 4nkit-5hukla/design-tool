@@ -1,12 +1,17 @@
 import { Box } from "@mui/material";
 
 import { useAppState } from "Contexts/AppState";
+import { useKeyboardShortcuts } from "hooks/useKeyboardShortcuts";
 
 import Layout from "Layout";
 import Stage from "Components/Stage";
 
 const Home = () => {
   const { containerRef } = useAppState();
+  
+  // Enable keyboard shortcuts (Ctrl/Cmd+Z for undo, Ctrl/Cmd+Y for redo)
+  useKeyboardShortcuts();
+  
   return (
     <>
       <title>EasySocial Design Tool</title>
