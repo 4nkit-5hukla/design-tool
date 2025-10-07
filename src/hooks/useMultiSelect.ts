@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useElements, useSelection } from '../contexts';
 import { ElementTransform } from '../types';
 
