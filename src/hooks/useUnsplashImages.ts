@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { createApi } from 'unsplash-js';
 import { UnsplashImage } from '../types';
 
@@ -26,6 +26,7 @@ export const useUnsplashImages = (): UseUnsplashResult => {
   const [totalImages, setTotalImages] = useState(0);
   const [currentQuery, setCurrentQuery] = useState<string>('');
   const [loadedImageIds, setLoadedImageIds] = useState<Set<string>>(new Set());
+  const latestRequestRef = useRef<{ query: string; page: number } | null>(null);
 
   const unsplash = createApi({
     accessKey: import.meta.env.REACT_APP_UNSPLASH_ACCESS_KEY ?? '',
@@ -37,6 +38,9 @@ export const useUnsplashImages = (): UseUnsplashResult => {
   const searchImages = useCallback(async (query: string, page: number = 1) => {
     if (!query.trim()) return;
 
+    const requestId = { query, page };
+    latestRequestRef.current = requestId;
+
     setLoading(true);
     setError(null);
 
@@ -47,6 +51,10 @@ export const useUnsplashImages = (): UseUnsplashResult => {
         perPage,
         orientation: 'landscape',
       });
+
+      if (latestRequestRef.current !== requestId) {
+        return;
+      }
 
       if (errors) {
         throw new Error(errors[0]);
@@ -77,10 +85,15 @@ export const useUnsplashImages = (): UseUnsplashResult => {
         setCurrentPage(page);
       }
     } catch (err) {
+      if (latestRequestRef.current !== requestId) {
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Failed to load images');
       console.error('Unsplash search error:', err);
     } finally {
-      setLoading(false);
+      if (latestRequestRef.current === requestId) {
+        setLoading(false);
+      }
     }
   }, [currentQuery, loadedImageIds]);
 

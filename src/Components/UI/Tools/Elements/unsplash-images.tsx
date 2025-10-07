@@ -1,10 +1,8 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import {
   ChangeEvent,
   FormEvent,
-  useCallback,
-  useEffect,
   useState,
+  useEffect,
 } from "react";
 import {
   Alert,
@@ -20,41 +18,34 @@ import {
 } from "@mui/material";
 import { ArrowBack, Close } from "@mui/icons-material";
 import { Masonry, LoadingButton } from "@mui/lab";
-import { OrderBy } from "unsplash-js";
 import Konva from "konva";
 
 import { useAppState } from "Contexts/AppState";
 import { useElementsContext } from "Contexts/Elements";
-import { useUnSplash } from "Hooks";
-import { I_Photos } from "Interfaces";
+import { useUnsplashImages } from "hooks/useUnsplashImages";
 
 const AllImages = () => {
-  const unSplash = useUnSplash();
   const { canvas, viewCategory, toggleViewCategory, setMultiSelectIds } = useAppState();
-  const { unSelect, unFocus } = useElementsContext();
+  const { unSelect, unFocus, addElement, setSelected } = useElementsContext();
   const maxHeight: number = canvas.height - 40;
   const maxWidth: number = canvas.width - 40;
-  const [loadingMore, setLoadingMore] = useState<boolean>(false);
-  const [searching, setSearching] = useState<boolean>(true);
-  const [pageNo, setPageNo] = useState<number>(1);
-  const [photos, setPhotos] = useState<I_Photos[]>([]);
-  const [totalPhotos, setTotalPhotos] = useState<number>(0);
   const [searchValue, setSearchValue] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [searchPageNo, setSearchPageNo] = useState<number>(0);
-  const { addElement, setSelected } = useElementsContext();
-  const addPhoto = (
-    img: string,
-    name: string,
-    imageHeight: number,
-    imageWidth: number,
-    aspectRatio: number
-  ) => {
+  
+  const { 
+    images, 
+    loading, 
+    error, 
+    hasMore, 
+    searchImages, 
+    loadMore 
+  } = useUnsplashImages();
+  const addPhoto = (imageUrl: string, name: string, imageWidth: number, imageHeight: number) => {
     const image = new window.Image();
-    image.src = img;
+    image.src = imageUrl;
     image.crossOrigin = "anonymous";
     image.addEventListener("load", () => {
-      const [element] = addElement<Konva.ShapeConfig>({
+      const aspectRatio = Math.min(maxWidth / imageWidth, maxHeight / imageHeight);
+      const [element] = addElement({
         type: "image",
         name,
         image,
@@ -62,137 +53,28 @@ const AllImages = () => {
         height: imageHeight * aspectRatio,
         x: canvas.height / 2,
         y: canvas.width / 2,
-        src: img,
-      });
+        src: imageUrl,
+      } as any);
       setSelected(element.id);
       setMultiSelectIds(new Set());
     });
   };
-  const searchUnsplashPhotos = async (
-    searchTerm: string,
-    searchPageNo: number
-  ) => {
-    try {
-      searchPageNo === 1 && setSearching(true);
-      const { errors, response } = await unSplash.search.getPhotos({
-        query: searchTerm,
-        page: searchPageNo,
-        perPage: 20,
-        orderBy: OrderBy.LATEST,
-      });
-      if (errors) {
-        throw Error(errors[0]);
-      }
-      if (response) {
-        const { results, total } = response;
-        totalPhotos === 0 && setTotalPhotos(total);
-        searchPageNo === 1 && setPhotos([]);
-        setPhotos((prevPhotos) => [
-          ...prevPhotos,
-          ...results.map(
-            ({
-              id,
-              alt_description,
-              description,
-              height,
-              width,
-              urls: { full, thumb },
-              user: { username },
-            }) => ({
-              id,
-              urls: { full, thumb },
-              height,
-              width,
-              aspectRatio: Math.min(maxWidth / width, maxHeight / height),
-              title: alt_description ?? description ?? `@${username}`,
-            })
-          ),
-        ]);
-        setSearching(false);
-        setLoadingMore(false);
-      }
-    } catch (error: any) {
-      console.error(error.message);
-    }
-  };
-  const doLoadMore = () => {
-    setLoadingMore(true);
-    if (searchTerm !== "") {
-      const nextSearchPageNo = searchPageNo + 1;
-      setSearchPageNo(nextSearchPageNo);
-      searchUnsplashPhotos(searchTerm, nextSearchPageNo);
-    } else {
-      setPageNo((pageNo) => pageNo + 1);
-    }
-  };
+
   const doSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (searchValue !== "" && searchValue !== searchTerm) {
-      const firstSearchPageNo =
-        searchValue !== searchTerm ? 1 : searchPageNo + 1;
-      setSearchTerm(searchValue);
-      setSearchPageNo(firstSearchPageNo);
-      searchUnsplashPhotos(searchValue, firstSearchPageNo);
+    if (searchValue.trim()) {
+      searchImages(searchValue.trim());
     }
   };
+
   const clearSearch = () => {
-    if (searchValue !== "") {
-      setSearchValue("");
-      setSearchTerm("");
-    }
+    setSearchValue("");
+    searchImages("latest");
   };
-  const getUnsplashPhotos = useCallback(async () => {
-    try {
-      if (searchTerm !== "") {
-        return;
-      }
-      if (searchPageNo > 0) {
-        setPhotos([]);
-        setSearchPageNo(0);
-      }
-      const { errors, response } = await unSplash.photos.list({
-        page: pageNo,
-        perPage: 20,
-        orderBy: OrderBy.LATEST,
-      });
-      if (errors) {
-        throw Error(errors[0]);
-      }
-      if (response) {
-        const { results, total } = response;
-        totalPhotos === 0 && setTotalPhotos(total);
-        setPhotos((prevPhotos) => [
-          ...prevPhotos,
-          ...results.map(
-            ({
-              id,
-              alt_description,
-              description,
-              height,
-              width,
-              urls: { full, thumb },
-              user: { username },
-            }) => ({
-              id,
-              urls: { full, thumb },
-              height,
-              width,
-              aspectRatio: Math.min(maxWidth / width, maxHeight / height),
-              title: alt_description ?? description ?? `@${username}`,
-            })
-          ),
-        ]);
-        setSearching(false);
-        setLoadingMore(false);
-      }
-    } catch (error: any) {
-      console.error(error.message);
-    }
-  }, [searchTerm, pageNo]);
 
   useEffect(() => {
-    getUnsplashPhotos();
-  }, [getUnsplashPhotos]);
+    searchImages("latest");
+  }, []);
 
   return (
     <Box display="flex" flexDirection="column" height="100%">
@@ -305,53 +187,41 @@ const AllImages = () => {
           marginTop={-0.75}
           marginX={-0.75}
         >
-          {!searching && photos.length > 0 && (
+          {error && (
+            <Alert severity="error">{error}</Alert>
+          )}
+          {!error && images.length > 0 && (
             <Masonry columns={2} spacing={1.25} sx={{ m: 0 }}>
-              {photos.map(
-                (
-                  {
-                    id,
-                    aspectRatio,
-                    title,
-                    height,
-                    width,
-                    urls: { full, thumb },
-                  }: I_Photos,
-                  index: number
-                ) => (
-                  <Card key={index}>
+              {images.map((image) => {
+                const imageUrl = `${image.urls.raw}&w=${Math.ceil(canvas.width * 1.5)}&h=${Math.ceil(canvas.height * 1.5)}&fit=crop`;
+                const title = image.alt_description || image.description || `Photo by ${image.user.name}`;
+                
+                return (
+                  <Card key={image.id}>
                     <Box
                       component={Button}
                       padding={0}
-                      onClick={() =>
-                        addPhoto(
-                          `${full}&w=${canvas.width * 1.5}`,
-                          title,
-                          height,
-                          width,
-                          aspectRatio
-                        )
-                      }
+                      onClick={() => addPhoto(imageUrl, title, image.width, image.height)}
                       title={title}
                     >
-                      <CardMedia component="img" image={thumb} alt={title} />
+                      <CardMedia component="img" image={image.urls.thumb} alt={title} />
                     </Box>
                   </Card>
-                )
-              )}
+                );
+              })}
             </Masonry>
           )}
-          {!searching && photos.length === 0 && (
-            <Alert severity="error">No Images found for "{searchValue}"</Alert>
+          {!loading && !error && images.length === 0 && (
+            <Alert severity="info">Search for images to add to your design</Alert>
           )}
         </Box>
-        {photos.length > 0 && photos.length < totalPhotos && (
+        {hasMore && images.length > 0 && (
           <Box display="flex" justifyContent="center">
             <LoadingButton
               variant="contained"
               color="primary"
-              onClick={doLoadMore}
-              loading={loadingMore}
+              onClick={loadMore}
+              loading={loading}
             >
               Load More
             </LoadingButton>
