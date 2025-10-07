@@ -12,7 +12,7 @@ interface SVGElementProps {
 
 export const SVGElementRenderer: React.FC<SVGElementProps> = ({
   element,
-  isSelected,
+  isSelected: _isSelected,
   onSelect,
   onTransformEnd,
 }) => {

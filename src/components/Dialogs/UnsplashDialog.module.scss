@@ -1,0 +1,46 @@
+.dialog {
+  :global(.MuiDialog-paper) {
+    min-height: 600px;
+    max-height: 80vh;
+  }
+}
+
+.searchForm {
+  margin-bottom: 16px;
+}
+
+.imageCard {
+  position: relative;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    
+    .imageOverlay {
+      opacity: 1;
+    }
+  }
+}
+
+.image {
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+
+.imageOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  padding: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.photographer {
+  color: white;
+  font-size: 12px;
+  display: block;
+}

@@ -13,7 +13,7 @@ interface ImageElementProps {
 
 export const ImageElementRenderer: React.FC<ImageElementProps> = ({
   element,
-  isSelected,
+  isSelected: _isSelected,
   onSelect,
   onTransformEnd,
 }) => {

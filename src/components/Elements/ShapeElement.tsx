@@ -12,7 +12,7 @@ interface ShapeElementProps {
 
 export const ShapeElementRenderer: React.FC<ShapeElementProps> = ({
   element,
-  isSelected,
+  isSelected: _isSelected,
   onSelect,
   onTransformEnd,
 }) => {

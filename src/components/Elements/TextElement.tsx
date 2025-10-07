@@ -12,7 +12,7 @@ interface TextElementProps {
 
 export const TextElementRenderer: React.FC<TextElementProps> = ({
   element,
-  isSelected,
+  isSelected: _isSelected,
   onSelect,
   onTransformEnd,
 }) => {
