@@ -13,7 +13,7 @@ import { useElements } from '../contexts/ElementsContext';
 import { useSelection } from '../contexts/SelectionContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { CanvasElement } from '../types';
+import { CanvasElement, TextElement, ShapeElement, ImageElement } from '../types';
 import styles from './TestPage.module.scss';
 
 const TestPageContent: React.FC = () => {
@@ -26,7 +26,7 @@ const TestPageContent: React.FC = () => {
   useKeyboardShortcuts();
 
   const handleAddText = () => {
-    const newElement: Omit<CanvasElement, 'id'> = {
+    const newElement: Omit<TextElement, 'id'> = {
       type: 'text',
       x: 100,
       y: 100,
@@ -54,7 +54,7 @@ const TestPageContent: React.FC = () => {
   };
 
   const handleAddShape = () => {
-    const newElement: Omit<CanvasElement, 'id'> = {
+    const newElement: Omit<ShapeElement, 'id'> = {
       type: 'shape',
       shapeType: 'rectangle',
       x: 150,
@@ -76,7 +76,7 @@ const TestPageContent: React.FC = () => {
 
   const handleSelectImage = (unsplashImage: any) => {
     // Add image element from Unsplash
-    const newElement: Omit<CanvasElement, 'id'> = {
+    const newElement: Omit<ImageElement, 'id'> = {
       type: 'image',
       x: 200,
       y: 200,

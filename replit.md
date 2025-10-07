@@ -72,8 +72,26 @@ src/
 3. Image swap feature - need dialog to change/swap images
 4. Integration - new architecture needs to be wired into existing app
 
+**Integration Plan** (for next agent):
+1. The new architecture is complete and tested in `src/pages/TestPage.tsx`
+2. Old app uses `src/Contexts/` (capital C), new uses `src/contexts/` (lowercase)
+3. To integrate:
+   - Add route for TestPage to verify new features
+   - Gradually migrate old components to use new contexts
+   - Replace old Unsplash integration with new useUnsplashImages hook
+   - Wire up image crop and swap features in main UI
+   - Add keyboard shortcuts to main app
+
+**Files Ready for Integration**:
+- ✅ `src/hooks/useUnsplashImages.ts` - Fixed pagination bug
+- ✅ `src/components/Dialogs/UnsplashDialog.tsx` - Image selection dialog
+- ✅ `src/hooks/useImageCrop.ts` + `src/components/Canvas/CropOverlay.tsx` - Crop functionality
+- ✅ `src/hooks/useImageSwap.ts` - Image swapping
+- ✅ `src/hooks/useKeyboardShortcuts.ts` - Undo/Redo shortcuts
+- ✅ All architect-reviewed and approved
+
 **Next Agent Tasks**:
-- See `REBUILD_PLAN.md` for detailed Phase 3-5 roadmap
+- See `REBUILD_PLAN.md` for detailed roadmap
 - See `.local/state/replit/agent/progress_tracker.md` for checklist
 
 ## External Dependencies

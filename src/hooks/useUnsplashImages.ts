@@ -55,18 +55,20 @@ export const useUnsplashImages = (): UseUnsplashResult => {
       if (response) {
         const { results, total } = response;
         
-        // Filter out any duplicate images based on ID
-        const newImages = results.filter(img => !loadedImageIds.has(img.id));
-        const newImageIds = new Set(loadedImageIds);
-        newImages.forEach(img => newImageIds.add(img.id));
-
-        if (page === 1 || query !== currentQuery) {
-          // New search - replace images
-          setImages(newImages);
-          setLoadedImageIds(new Set(newImages.map(img => img.id)));
+        // Check if this is a new search
+        const isNewSearch = page === 1 || query !== currentQuery;
+        
+        if (isNewSearch) {
+          // New search - reset loaded IDs and replace images
+          setImages(results);
+          setLoadedImageIds(new Set(results.map(img => img.id)));
           setCurrentQuery(query);
         } else {
-          // Load more - append images
+          // Load more - filter duplicates and append
+          const newImages = results.filter(img => !loadedImageIds.has(img.id));
+          const newImageIds = new Set(loadedImageIds);
+          newImages.forEach(img => newImageIds.add(img.id));
+          
           setImages(prev => [...prev, ...newImages]);
           setLoadedImageIds(newImageIds);
         }
