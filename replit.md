@@ -50,37 +50,46 @@ src/
 -   **Debounced History System** (Oct 2025): Implemented intelligent history management with 300ms debounced saving to improve performance. Critical flush logic ensures pending changes are saved before undo/redo operations to prevent data loss. The system properly handles text element scaling through fixTextShapes coordination with use-undo library.
 
 ### Rebuild Progress (October 7, 2025)
-**Status**: Phase 1 & 2 Complete - New Architecture Foundation Ready
+**Status**: Phase 4 In Progress - Integration Started
 
-**New Implementation** (in `src/` alongside old code):
+**Phase 1-3 Complete** (New Architecture Foundation):
 -   **New Type System** (`src/types/`): Clean TypeScript interfaces for elements, canvas, history, and Unsplash
 -   **New Contexts** (`src/contexts/`): Elements, Selection, History, and Canvas contexts with improved state management
--   **Multi-Select Fixed** (`src/hooks/useMultiSelect.ts`): 
-    - ✅ Rotation-aware bounding box calculation
-    - ✅ Transform preservation using element centers (not corners)
-    - ✅ Works incrementally on current state (no stale data issues)
-    - ✅ Supports consecutive operations without data loss
-    - ✅ **ARCHITECT REVIEWED AND APPROVED**
--   **Canvas Components** (`src/components/`):
-    - Canvas Stage with Konva integration
-    - Element renderers (Text, Image, Shape, SVG) with CSS Modules
-    - Transformer hook for selection handling
+-   **Multi-Select Fixed** (`src/hooks/useMultiSelect.ts`): Rotation-aware, transform-preserving multi-select
+-   **Image Features**: Crop, swap, and Unsplash with fixed pagination
+-   **Keyboard Shortcuts**: Undo/Redo (Ctrl/Cmd+Z/Y)
+-   **All features architect-reviewed and approved** ✅
 
-**Known Issues to Fix** (Phase 3):
-1. Image crop functionality - needs implementation
-2. Unsplash pagination bug - last 3 items of page N duplicate on page N+1
-3. Image swap feature - need dialog to change/swap images
-4. Integration - new architecture needs to be wired into existing app
+**Phase 4 Integration Progress** (Oct 7, 2025):
+1. ✅ **Test Page Route Added**: `/test` route now accessible to demo new features
+2. ✅ **New Contexts at Root Level**: AppRouter now wraps app with CanvasProvider → ElementsProvider → SelectionProvider → HistoryProvider
+3. ✅ **Keyboard Shortcuts Enabled**: Added to Home page (will work once state bridge is complete)
+4. ⏳ **Critical Next Step**: Create adapter providers to bridge old `Contexts/*` and new `contexts/*` for state sharing
 
-**Integration Plan** (for next agent):
-1. The new architecture is complete and tested in `src/pages/TestPage.tsx`
-2. Old app uses `src/Contexts/` (capital C), new uses `src/contexts/` (lowercase)
-3. To integrate:
-   - Add route for TestPage to verify new features
-   - Gradually migrate old components to use new contexts
-   - Replace old Unsplash integration with new useUnsplashImages hook
-   - Wire up image crop and swap features in main UI
-   - Add keyboard shortcuts to main app
+**Current Architecture State**:
+- Old app: Uses `src/Contexts/` (capital C) - AppState, Elements, History
+- New features: Use `src/contexts/` (lowercase c) - Elements, Selection, History, Canvas
+- **State is NOT synchronized yet** - old and new contexts manage separate state
+- Keyboard shortcuts added but operate on isolated new history (no effect until bridge complete)
+
+**What Works**:
+- ✅ Test page at `/test` demonstrates all new features working
+- ✅ New contexts available throughout app
+- ✅ No regressions in existing functionality
+
+**What Needs Completion** (For Next Agent):
+1. **CRITICAL**: Create adapter providers that sync old/new contexts (see architect guidance below)
+2. Migrate Unsplash integration to use `useUnsplashImages` hook
+3. Wire up image crop feature to UI
+4. Wire up image swap feature to UI
+5. Test and verify all features work together
+
+**Architect Guidance for Adapters**:
+> "Implement adapter providers that mirror legacy Contexts/* state into the new contexts (starting with history, elements, and selection) so shared hooks receive real data. Once adapters are in place, verify keyboard shortcuts drive the unified history and remove redundant legacy key handlers when safe."
+
+**Files Modified**:
+- `src/Routes/AppRouter.tsx` - Added new context providers at root
+- `src/Pages/Home/index.tsx` - Added useKeyboardShortcuts hook
 
 **Files Ready for Integration**:
 - ✅ `src/hooks/useUnsplashImages.ts` - Fixed pagination bug
@@ -88,11 +97,13 @@ src/
 - ✅ `src/hooks/useImageCrop.ts` + `src/components/Canvas/CropOverlay.tsx` - Crop functionality
 - ✅ `src/hooks/useImageSwap.ts` - Image swapping
 - ✅ `src/hooks/useKeyboardShortcuts.ts` - Undo/Redo shortcuts
-- ✅ All architect-reviewed and approved
 
-**Next Agent Tasks**:
-- See `REBUILD_PLAN.md` for detailed roadmap
-- See `.local/state/replit/agent/progress_tracker.md` for checklist
+**Next Agent Start Here**:
+1. Read architect guidance in this file and `INTEGRATION_GUIDE.md`
+2. Create adapter providers to bridge `Contexts/History` → `contexts/HistoryContext`
+3. Create adapter for `Contexts/Elements` → `contexts/ElementsContext`  
+4. Test keyboard shortcuts work with bridged state
+5. Continue with Unsplash/image feature integration
 
 ## External Dependencies
 
