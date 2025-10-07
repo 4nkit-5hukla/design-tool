@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useHistory } from '../contexts/HistoryContext';
+import { useHistory } from '../contexts/adapters/HistoryAdapter';
 
 interface UseKeyboardShortcutsOptions {
   enabled?: boolean;

@@ -8,7 +8,7 @@ import { TestPage } from "pages/TestPage";
 import { CanvasProvider } from "contexts/CanvasContext";
 import { ElementsProvider } from "contexts/ElementsContext";
 import { SelectionProvider } from "contexts/SelectionContext";
-import { HistoryProvider } from "contexts/HistoryContext";
+import { HistoryAdapter } from "contexts/adapters/HistoryAdapter";
 
 const routes: RouteObject[] = [
   { path: "/", element: <Home /> },
@@ -25,9 +25,9 @@ const AppRouter: FC = () => {
       <CanvasProvider>
         <ElementsProvider>
           <SelectionProvider>
-            <HistoryProvider>
+            <HistoryAdapter>
               <AppRoutes />
-            </HistoryProvider>
+            </HistoryAdapter>
           </SelectionProvider>
         </ElementsProvider>
       </CanvasProvider>
